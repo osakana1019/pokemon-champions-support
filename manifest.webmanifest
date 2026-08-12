@@ -1,0 +1,10 @@
+{
+  "name": "Pokémon Champions Support",
+  "short_name": "Champions Support",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#090d14",
+  "theme_color": "#111722",
+  "description": "Pokémon Championsの環境データ連動パーティ構築・選出支援ツール",
+  "lang": "ja"
+}

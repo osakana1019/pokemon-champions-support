@@ -1,0 +1,4 @@
+/index.html
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: public, max-age=3600

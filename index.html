@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pokémon Champions Support — v18</title>
+<title>Pokémon Champions Support — v18.1</title>
 <meta name="description" content="Pokémon Championsの環境データを使ったパーティ構築・クイック選出・対策候補・環境分析ツール">
 <meta name="application-name" content="Pokémon Champions Support">
 <meta name="color-scheme" content="dark">
-<meta property="og:title" content="Pokémon Champions Support — v18">
+<meta property="og:title" content="Pokémon Champions Support — v18.1">
 <meta property="og:description" content="環境データ連動のパーティ構築・選出・対策支援ツール">
 
 <style>
@@ -1008,7 +1008,28 @@ const SHOWDOWN_SPRITE_OVERRIDES={
 };
 const fallback=m=>SHOWDOWN_SPRITE_OVERRIDES[m.name]||`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m.dex}.png`;
 let mine=JSON.parse(localStorage.getItem('champ_mine')||'[]'),opp=[],buildTeam=JSON.parse(localStorage.getItem('champ_build')||'[]'),buildItems=JSON.parse(localStorage.getItem('champ_build_items')||'{}'),savedParty=JSON.parse(localStorage.getItem('champ_saved_party')||'[]');
-const commonItems=["きあいのタスキ","こだわりスカーフ","こだわりハチマキ","こだわりメガネ","いのちのたま","オボンのみ","ラムのみ","たべのこし","メンタルハーブ","じゃくてんほけん","ひかりのねんど"];
+const CHAMPIONS_HELD_ITEMS=["きあいのタスキ","こだわりスカーフ","オボンのみ","ラムのみ","たべのこし","メンタルハーブ","しろいハーブ","せんせいのツメ","おうじゃのしるし","ピントレンズ","ひかりのこな","きあいのハチマキ","かいがらのすず","もくたん","しんぴのしずく","きせきのタネ","じしゃく","とけないこおり","くろおび","どくバリ","やわらかいすな","するどいくちばし","まがったスプーン","ぎんのこな","かたいいし","のろいのおふだ","りゅうのキバ","くろいメガネ","メタルコート","ようせいのハネ","シルクのスカーフ","でんきだま","クラボのみ","カゴのみ","モモンのみ","チーゴのみ","ナナシのみ","ヒメリのみ","オレンのみ","キーのみ","ホズのみ","オッカのみ","イトケのみ","ソクノのみ","リンドのみ","ヤチェのみ","ヨプのみ","ビアーのみ","シュカのみ","バコウのみ","ウタンのみ","タンガのみ","ヨロギのみ","カシブのみ","ハバンのみ","ナモのみ","バリブのみ","ロゼルのみ"];
+const commonItems=CHAMPIONS_HELD_ITEMS;
+const CHAMPIONS_HELD_ITEM_SET=new Set(CHAMPIONS_HELD_ITEMS);
+function isChampionsHeldItem(v){
+ const x=String(v||'').trim();
+ if(!x)return true;
+ if(CHAMPIONS_HELD_ITEM_SET.has(x))return true;
+ // Mega Stones are legal only for their corresponding Mega form; existing Mega logic locks those automatically.
+ if(/ナイト[XY]?$/.test(x))return true;
+ return false;
+}
+function rejectUnavailableChampionsItem(v){
+ const x=String(v||'').trim();
+ if(!x||isChampionsHeldItem(x))return false;
+ alert(`「${x}」は現在のPokémon Championsで使用できる持ち物として登録されていません。`);
+ return true;
+}
+
+for(const k of Object.keys(buildItems)){if(buildItems[k]&&!isChampionsHeldItem(buildItems[k]))delete buildItems[k];}
+localStorage.setItem('champ_build_items',JSON.stringify(buildItems));
+savedParty.forEach(x=>{if(x?.item&&!isChampionsHeldItem(x.item))x.item='';});
+localStorage.setItem('champ_saved_party',JSON.stringify(savedParty));
 const yakkun={
 "ガブリアス":{
  rank:1,season:"M-5",date:"2026-08-10",source:"GameWith",
@@ -1585,7 +1606,7 @@ const COMMON_ENV_JA={
   earthquake:"じしん",protect:"まもる",dragonclaw:"ドラゴンクロー",rockslide:"いわなだれ",stompingtantrum:"じだんだ",poisonjab:"どくづき",dragontail:"ドラゴンテール",ironhead:"アイアンヘッド",scaleshot:"スケイルショット",swordsdance:"つるぎのまい",playrough:"じゃれつく",shadowclaw:"シャドークロー",shadowsneak:"かげうち",uturn:"とんぼがえり",knockoff:"はたきおとす",flowertrick:"トリックフラワー",hydropump:"ハイドロポンプ",moonblast:"ムーンフォース",icebeam:"れいとうビーム",dracometeor:"りゅうせいぐん",closecombat:"インファイト",stealthrock:"ステルスロック",roost:"はねやすめ",bodypress:"ボディプレス",irondefense:"てっぺき",willowisp:"おにび",recover:"じこさいせい",substitute:"みがわり",taunt:"ちょうはつ"
  },
  items:{
-  lifeorb:"いのちのたま",choicescarf:"こだわりスカーフ",choiceband:"こだわりハチマキ",choicespecs:"こだわりメガネ",sitrusberry:"オボンのみ",focussash:"きあいのタスキ",leftovers:"たべのこし",lumberry:"ラムのみ",expertbelt:"たつじんのおび",mentalherb:"メンタルハーブ",weaknesspolicy:"じゃくてんほけん",lightclay:"ひかりのねんど",softsand:"やわらかいすな",yacheberry:"ヤチェのみ",roseliberry:"ロゼルのみ",quickclaw:"せんせいのツメ",nevermeltice:"とけないこおり"
+  choicescarf:"こだわりスカーフ",sitrusberry:"オボンのみ",focussash:"きあいのタスキ",leftovers:"たべのこし",lumberry:"ラムのみ",mentalherb:"メンタルハーブ",softsand:"やわらかいすな",yacheberry:"ヤチェのみ",roseliberry:"ロゼルのみ",quickclaw:"せんせいのツメ",nevermeltice:"とけないこおり"
  },
  abilities:{
   roughskin:"さめはだ",sandveil:"すながくれ",intimidate:"いかく",innerfocus:"せいしんりょく",levitate:"ふゆう",overgrow:"しんりょく",blaze:"もうか",torrent:"げきりゅう",swarm:"むしのしらせ",adaptability:"てきおうりょく",unaware:"てんねん",regenerator:"さいせいりょく",prankster:"いたずらごころ",multiscale:"マルチスケイル",technician:"テクニシャン",magicguard:"マジックガード",pressure:"プレッシャー"
@@ -1733,7 +1754,7 @@ function rebuildEnvDb(){
    rank:(m.usageRank&&m.usageRank<=150)?m.usageRank:null,
    rankSource:"GameWith M-5 8/10",
    moves:(y.moves||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),
-   items:(y.items||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),
+   items:(y.items||[]).map(x=>({name:x[0],pct:Number(x[1])||0})).filter(x=>isChampionsHeldItem(x.name)),
    abilities:(y.abilities||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),
    natures:(y.natures||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),
    spreads:(y.spreads||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),
@@ -2173,7 +2194,8 @@ function updateSavedRole(i,v){if(!savedParty[i])return;savedParty[i].customRole=
 function updateSavedItem(i,v){
  if(!savedParty[i])return;
  const base=mons.find(m=>m.name===savedParty[i].name);
- savedParty[i].item=base?.mega?megaStoneFor(base):v;
+ if(!base?.mega && rejectUnavailableChampionsItem(v)){savedParty[i].item='';saveSavedParty();renderSavedEditors();renderSavedCompletion?.();return;}
+ savedParty[i].item=base?.mega?megaStoneFor(base):String(v||'').trim();
  saveSavedParty();
  renderSavedCompletion?.();
 }
@@ -2628,7 +2650,7 @@ function quickOrderScore(x){
  if(m.role==="積みエース")clean+=5;
  if(m.role==="高速アタッカー")clean+=3;
  if(moves.some(v=>["かげうち","しんそく","ふいうち","マッハパンチ","アクアジェット","こおりのつぶて","バレットパンチ"].includes(v.name)))clean+=3;
- if(["いのちのたま","こだわりハチマキ","こだわりメガネ"].some(v=>item.includes(v)))clean+=2;
+ 
 
  lead+=x.pct*.04;mid+=x.pct*.04;clean+=x.pct*.04;
  return {lead,mid,clean};
@@ -2705,7 +2727,7 @@ function quickAnalyze(){
     let itemReason='';
     if(item.includes('こだわりスカーフ')){score+=3;itemReason='スカーフで素早さを補強'}
     else if(item.includes('きあいのタスキ')){score+=2.2;itemReason='タスキで行動保証'}
-    else if(['いのちのたま','たつじんのおび','こだわりハチマキ','こだわりメガネ'].some(x=>item.includes(x))){score+=2;itemReason='持ち物で火力を補強'}
+    
     else if(['たべのこし','オボンのみ'].some(x=>item.includes(x))){score+=1.3;itemReason='回復系持ち物で安定'}
 
     const hasPriority=(m.set?.moves||[]).some(x=>priorityNames.includes(x.name));
@@ -2940,7 +2962,7 @@ function renderBuildCurrent(){
   </div>`;
  }).join('')+`<datalist id="items">${commonItems.map(x=>`<option value="${x}">`).join('')}</datalist>`;
 }
-function clearBuild(){buildTeam=[];localStorage.removeItem('champ_build');renderBuildCurrent();renderBuildRoster();renderTeamCompletion();buildSuggestions.innerHTML='';buildSummary.textContent='2匹以上登録してください。'} function setItem(n,v){buildItems[n]=v;localStorage.setItem('champ_build_items',JSON.stringify(buildItems))}
+function clearBuild(){buildTeam=[];localStorage.removeItem('champ_build');renderBuildCurrent();renderBuildRoster();renderTeamCompletion();buildSuggestions.innerHTML='';buildSummary.textContent='2匹以上登録してください。'} function setItem(n,v){v=String(v||'').trim();if(rejectUnavailableChampionsItem(v)){buildItems[n]='';localStorage.setItem('champ_build_items',JSON.stringify(buildItems));renderBuildCurrent();return;}buildItems[n]=v;localStorage.setItem('champ_build_items',JSON.stringify(buildItems))}
 const baseFormViable=new Set(['ギャラドス','ガブリアス','メタグロス','ハッサム','バンギラス']);
 const megaPreferred=new Set(["リザードン", "カエンジシ", "ゲンガー", "ギャラドス", "メタグロス", "ミミロップ", "バシャーモ", "ラグラージ", "ルカリオ", "サーナイト", "フシギバナ", "カメックス", "ハッサム", "ガルーラ", "ジュカイン", "ガブリアス", "マフォクシー", "メガニウム", "クチート", "ヤミラミ", "チルタリス", "エルレイド", "サメハダー", "ヤドラン", "ハガネール", "ピジョット", "オニゴーリ", "バクーダ", "スピアー", "ボーマンダ", "バンギラス", "ヘラクロス", "ライボルト", "アブソル", "ユキノオー"]);
 

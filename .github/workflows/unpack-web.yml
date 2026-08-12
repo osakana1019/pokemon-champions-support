@@ -1,0 +1,46 @@
+name: Unpack web app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Pokemon_Champions_Support_v17_WEB (1).zip'
+      - '.github/workflows/unpack-web.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unpack web files
+        run: |
+          set -e
+          ZIP='Pokemon_Champions_Support_v17_WEB (1).zip'
+          TMP="$(mktemp -d)"
+          unzip -o "$ZIP" -d "$TMP"
+          cp -f "$TMP"/index.html ./index.html
+          cp -f "$TMP"/404.html ./404.html
+          cp -f "$TMP"/manifest.webmanifest ./manifest.webmanifest
+          cp -f "$TMP"/favicon.svg ./favicon.svg
+          cp -f "$TMP"/_headers ./_headers
+          cp -f "$TMP"/netlify.toml ./netlify.toml
+          cp -f "$TMP"/vercel.json ./vercel.json
+          cp -f "$TMP"/README_WEB.txt ./README_WEB.txt
+
+      - name: Commit extracted site
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html 404.html manifest.webmanifest favicon.svg _headers netlify.toml vercel.json README_WEB.txt
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Deploy v17 web files'
+            git push
+          fi

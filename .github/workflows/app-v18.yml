@@ -1,0 +1,47 @@
+name: Apply v18 useful dashboard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/enhance_v18.py'
+      - '.github/workflows/app-v18.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  enhance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply v18 enhancement
+        run: python scripts/enhance_v18.py
+
+      - name: Validate JavaScript syntax
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const h=fs.readFileSync('index.html','utf8');
+          const scripts=[...h.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+          for(const [i,s] of scripts.entries()){
+            try{new Function(s)}catch(e){console.error(`script ${i}: ${e.message}`);process.exit(1)}
+          }
+          if(!h.includes('data-app-version="v18-useful"') || !h.includes('id="homePage"')) process.exit(2);
+          console.log('v18 validation OK');
+          NODE
+
+      - name: Commit enhanced app
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Upgrade app to v18 useful dashboard'
+            git push
+          fi

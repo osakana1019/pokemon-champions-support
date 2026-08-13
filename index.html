@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pokémon Champions Support — v18.6</title>
+<title>Pokémon Champions Support — v18.7</title>
 <meta name="description" content="Pokémon Championsの環境データを使ったパーティ構築・クイック選出・対策候補・環境分析ツール">
 <meta name="application-name" content="Pokémon Champions Support">
 <meta name="color-scheme" content="dark">
-<meta property="og:title" content="Pokémon Champions Support — v18.6">
+<meta property="og:title" content="Pokémon Champions Support — v18.7">
 <meta property="og:description" content="環境データ連動のパーティ構築・選出・対策支援ツール">
 
 <style>
@@ -5148,7 +5148,7 @@ function v186CounterCandidates(value){
   seen.add(m.name);
   if(q&&!v184NormalizeSearch(m.name).includes(q))continue;
   out.push(m);
-  if(out.length>=9)break;
+  if(out.length>=5)break;
  }
  return out;
 }
@@ -5173,7 +5173,7 @@ function initCounterPickerV186(){
   style.textContent=`
    .counterSuggestWrapV186{position:relative;flex:1 1 260px;min-width:0}
    .counterSuggestWrapV186 #counterPokemonInput{width:100%}
-   .counterSuggestBoxV186{position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:120;display:none;max-height:270px;overflow:auto;padding:5px;background:#0b111b;border:1px solid #3b4d68;border-radius:11px;box-shadow:0 14px 32px rgba(0,0,0,.46)}
+   .counterSuggestBoxV186{position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:120;display:none;max-height:185px;overflow:auto;padding:5px;background:#0b111b;border:1px solid #3b4d68;border-radius:11px;box-shadow:0 14px 32px rgba(0,0,0,.46)}
    .counterSuggestBoxV186.show{display:block}
    .counterSuggestRowV186{width:100%;min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 9px;border:0;border-radius:8px;background:transparent;color:#eef4ff;text-align:left;font-size:12px}
    .counterSuggestRowV186:hover,.counterSuggestRowV186.active{background:#17243a}
@@ -5198,9 +5198,11 @@ function initCounterPickerV186(){
   input.focus();
  }
  function render(){
-  const list=v186CounterCandidates(input.value);
+  const raw=String(input.value||'').trim();
   box.innerHTML='';
   active=-1;
+  if(!raw){box.classList.remove('show');return;}
+  const list=v186CounterCandidates(raw);
   if(!list.length){box.classList.remove('show');return;}
   for(const m of list){
    const b=document.createElement('button');

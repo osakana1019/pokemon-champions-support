@@ -1,0 +1,48 @@
+name: Apply tactical counter and kana search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/fix_counter_search_v18_4.py'
+      - '.github/workflows/counter-search-v18-4.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply tactical counter/search patch
+        run: python scripts/fix_counter_search_v18_4.py
+
+      - name: Check JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)
+          Path('/tmp/app.js').write_text('\n'.join(blocks),encoding='utf-8')
+          assert 'v18.4: tactical counter reliability + universal kana search' in s
+          assert 'runV184SelfTests' in s
+          print('script blocks:',len(blocks))
+          PY
+          node --check /tmp/app.js
+
+      - name: Commit patched app
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Improve counter reliability and kana search'
+            git push
+          fi

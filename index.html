@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pokémon Champions Support — v20.1</title>
+<title>Pokémon Champions Support — v20.2</title>
 <meta name="description" content="Pokémon Championsの環境データを使ったパーティ構築・クイック選出・対策候補・環境分析ツール">
 <meta name="application-name" content="Pokémon Champions Support">
 <meta name="color-scheme" content="light">
-<meta property="og:title" content="Pokémon Champions Support — v20.1">
+<meta property="og:title" content="Pokémon Champions Support — v20.2">
 <meta property="og:description" content="環境データ連動のパーティ構築・選出・対策支援ツール">
 
 <style>
@@ -1030,12 +1030,13 @@ const v201PixelSlug=m=>{
   .replace(/[.’'`]/g,'').replace(/\s+/g,'').replace(/[^a-z0-9-]/g,'');
 };
 const v201PixelSprite=m=>`https://play.pokemonshowdown.com/sprites/gen5/${v201PixelSlug(m)}.png`;
-const sprite=m=>v201PixelSprite(m);
+const v202ClearSprite=m=>`https://play.pokemonshowdown.com/sprites/home-centered/${v201PixelSlug(m)}.png`;
+const sprite=m=>v202ClearSprite(m);
 const SHOWDOWN_SPRITE_OVERRIDES={
  "ヒスイダイケンキ":"https://play.pokemonshowdown.com/sprites/gen5/samurott-hisui.png"
 };
 const V201_PIXEL_PLACEHOLDER='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="18" fill="#f1f3f5"/><circle cx="48" cy="48" r="27" fill="none" stroke="#aeb5bf" stroke-width="6"/><path d="M21 48h54" stroke="#aeb5bf" stroke-width="6"/><circle cx="48" cy="48" r="9" fill="#fff" stroke="#aeb5bf" stroke-width="5"/></svg>`);
-const fallback=m=>V201_PIXEL_PLACEHOLDER;
+const fallback=m=>specialMegaArt[m.name]||homeSprite(m)||V201_PIXEL_PLACEHOLDER;
 let mine=JSON.parse(localStorage.getItem('champ_mine')||'[]'),opp=[],buildTeam=JSON.parse(localStorage.getItem('champ_build')||'[]'),buildItems=JSON.parse(localStorage.getItem('champ_build_items')||'{}'),savedParty=JSON.parse(localStorage.getItem('champ_saved_party')||'[]');
 const CHAMPIONS_ITEM_RULESET="M-B / 2026-08-10";
 const CHAMPIONS_HELD_ITEMS=["クラボのみ","カゴのみ","モモンのみ","チーゴのみ","ナナシのみ","ヒメリのみ","オレンのみ","キーのみ","ラムのみ","オボンのみ","オッカのみ","イトケのみ","ソクノのみ","リンドのみ","ヤチェのみ","ヨプのみ","ビアーのみ","シュカのみ","バコウのみ","ウタンのみ","タンガのみ","ヨロギのみ","カシブのみ","ハバンのみ","ナモのみ","リリバのみ","ホズのみ","ロゼルのみ","あついいわ","いのちのたま","おうじゃのしるし","おおきなねっこ","かいがらのすず","かたいいし","きあいのタスキ","きあいのハチマキ","きせきのタネ","きれいなぬけがら","ぎんのこな","くろいてっきゅう","くろいメガネ","くろおび","こうかくレンズ","こだわりスカーフ","さらさらいわ","じしゃく","しめったいわ","シルクのスカーフ","しろいハーブ","しんぴのしずく","するどいくちばし","せんせいのツメ","たつじんのおび","たべのこし","ちからのハチマキ","つめたいいわ","でんきだま","どくバリ","とけないこおり","のろいのおふだ","ひかりのこな","ひかりのねんど","ピントレンズ","フォーカスレンズ","まがったスプーン","メタルコート","メトロノーム","メンタルハーブ","もくたん","ものしりメガネ","やわらかいすな","ようせいのハネ","りゅうのキバ"];
@@ -7007,6 +7008,56 @@ try{renderSavedEditors();renderSavedRoster();renderBuildRoster();renderBuildCurr
 const testMon={name:'__v201test',moves:[{name:'シャドーボール',type:'ゴースト'}]};delete shadow[testMon.name];const test=canonicalMoves(testMon);delete shadow[testMon.name];writeShadow(shadow);
 window.__V201_SELFTEST__={durable:test.length===4&&test[0].name==='シャドーボール',pixel:/play\.pokemonshowdown\.com\/sprites\/gen5\//.test(sprite(mons[0])),light:!!document.getElementById('v201-white-theme')};
 document.documentElement.setAttribute('data-v201-selftest',Object.values(window.__V201_SELFTEST__).every(Boolean)?'ok':'fail');
+})();
+</script>
+
+
+<style id="v202-theme">
+/* ===== v20.2 theme settings ===== */
+html[data-app-theme=charcoal]{--xbg:#171a1f;--xtop:#20242a;--xcard:#252a31;--xcard2:#2b3038;--xline:#3d444e;--xtext:#eef1f4;--xmuted:#aab2bd;--xsoft:#30363e;--xaccent:#e7eaee;--xaccenttext:#171a1f}
+html[data-app-theme=light]{--xbg:#e9ebee;--xtop:#f0f2f4;--xcard:#f8f9fa;--xcard2:#f1f3f5;--xline:#cbd0d7;--xtext:#252a31;--xmuted:#69717d;--xsoft:#e3e6ea;--xaccent:#24282f;--xaccenttext:#fff}
+html[data-app-theme=dark]{--xbg:#090b0e;--xtop:#0f1216;--xcard:#13171c;--xcard2:#181d23;--xline:#2a3038;--xtext:#e8ebef;--xmuted:#8f98a4;--xsoft:#1d232a;--xaccent:#f1f3f5;--xaccenttext:#0b0d10}
+html[data-app-theme=teal]{--xbg:#0d1717;--xtop:#122020;--xcard:#172625;--xcard2:#1d2e2c;--xline:#35504c;--xtext:#edf7f5;--xmuted:#9eb7b2;--xsoft:#203532;--xaccent:#71dbc3;--xaccenttext:#0b1a17}
+html[data-app-theme]{background:var(--xbg)!important;color-scheme:dark}html[data-app-theme=light]{color-scheme:light}
+html[data-app-theme] body{background:linear-gradient(180deg,var(--xtop),var(--xbg) 240px)!important;color:var(--xtext)!important}
+html[data-app-theme] .card,html[data-app-theme] .teamPane,html[data-app-theme] .savedEditor,html[data-app-theme] .counterToolCard,html[data-app-theme] .pick,html[data-app-theme] .metaRec,html[data-app-theme] .v12BuildPick,html[data-app-theme] .v19IntelCard,html[data-app-theme] .v19Mini,html[data-app-theme] .v19TeamSpeed{background:var(--xcard)!important;border-color:var(--xline)!important;color:var(--xtext)!important}
+html[data-app-theme] .small,html[data-app-theme] .sub,html[data-app-theme] .buildReasons{color:var(--xmuted)!important}
+html[data-app-theme] .mon,html[data-app-theme] .sel,html[data-app-theme] .rankRow,html[data-app-theme] .oppQuickMon,html[data-app-theme] .savedEmpty,html[data-app-theme] .dataSection,html[data-app-theme] .typeMatchSection{background:var(--xcard2)!important;border-color:var(--xline)!important;color:var(--xtext)!important}
+html[data-app-theme] input,html[data-app-theme] select,html[data-app-theme] textarea,html[data-app-theme] .savedItem,html[data-app-theme] .buildItemInput,html[data-app-theme] .buildMoveInput{background:var(--xcard2)!important;border-color:var(--xline)!important;color:var(--xtext)!important}
+html[data-app-theme] button{background:var(--xsoft)!important;color:var(--xtext)!important;box-shadow:inset 0 0 0 1px var(--xline)!important}html[data-app-theme] .primary,html[data-app-theme] .mineAdd,html[data-app-theme] .buildAddBtn{background:var(--xaccent)!important;color:var(--xaccenttext)!important;box-shadow:none!important}
+html[data-app-theme] .appnav{background:var(--xcard)!important}html[data-app-theme] .appnav button{background:transparent!important;color:var(--xmuted)!important;box-shadow:none!important}html[data-app-theme] .appnav .activeApp{background:var(--xaccent)!important;color:var(--xaccenttext)!important}
+html[data-app-theme] .moveSuggestBox,html[data-app-theme] .buildMoveSuggestBox,html[data-app-theme] .itemSuggestBox,html[data-app-theme] .counterSuggestBoxV186{background:var(--xcard)!important;border-color:var(--xline)!important;color:var(--xtext)!important}
+.mon img,.sel img,.rankRow img,.oppQuickMon img,.profile img,.pick img,.metaRec img,.savedHead img,.homePartyMon img,.homeMetaMon img{image-rendering:auto!important;filter:none!important}
+#v202SettingsBtn{position:fixed;right:16px;bottom:16px;z-index:490;border-radius:999px!important;padding:9px 14px!important;background:var(--xcard)!important;color:var(--xtext)!important;border:1px solid var(--xline)!important}#v202SettingsPanel{position:fixed;right:16px;bottom:68px;z-index:495;width:min(350px,calc(100vw - 28px));padding:14px;border-radius:18px;background:var(--xcard)!important;color:var(--xtext)!important;border:1px solid var(--xline)!important;box-shadow:0 18px 48px #0004;display:none}#v202SettingsPanel.show{display:block}.v202ThemeGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.v202ThemeGrid button{text-align:left!important}.v202ThemeGrid button.active{outline:2px solid var(--xaccent)}.v202Swatch{display:block;height:24px;border-radius:7px;margin-bottom:5px;border:1px solid var(--xline)}
+</style>
+<script>
+(function(){const K='champ_ui_theme_v202',T={charcoal:['チャコール','#252a31'],light:['ライト','#f8f9fa'],dark:['ダーク','#13171c'],teal:['ティール','#172625']};function set(k,save=true){if(!T[k])k='charcoal';document.documentElement.dataset.appTheme=k;if(save)try{localStorage.setItem(K,k)}catch(e){};document.querySelectorAll('.v202ThemeGrid button').forEach(b=>b.classList.toggle('active',b.dataset.t===k))}let cur='charcoal';try{cur=localStorage.getItem(K)||cur}catch(e){};set(cur,false);const b=document.createElement('button');b.id='v202SettingsBtn';b.textContent='設定';const p=document.createElement('div');p.id='v202SettingsPanel';p.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b>表示設定</b><button data-close>×</button></div><div class="small" style="margin-bottom:7px">テーマ</div><div class="v202ThemeGrid">'+Object.entries(T).map(([k,v])=>`<button data-t="${k}"><span class="v202Swatch" style="background:${v[1]}"></span><b>${v[0]}</b></button>`).join('')+'</div>';document.body.append(p,b);b.onclick=()=>p.classList.toggle('show');p.querySelector('[data-close]').onclick=()=>p.classList.remove('show');p.querySelectorAll('[data-t]').forEach(x=>x.onclick=()=>set(x.dataset.t));set(cur,false);window.v202SetTheme=set;})();
+</script>
+
+
+<script>
+/* ===== v20.2 strict quick set logic ===== */
+(function(){
+function exactSaved(m){return (savedParty||[]).find(x=>x?.name===m?.name)||null}
+function strictMon(m){const q=exactSaved(m);if(!q)return {...m,set:{item:'',moves:[]}};const base=mons.find(x=>x.name===q.name)||m;return {...m,role:q.customRole||q.role||base.role||m.role,set:{item:base.mega?megaStoneFor(base):String(q.item||''),moves:(q.moves||[]).filter(x=>x?.name).map(x=>({...x}))}}}
+function sync(){mine=mine.map(strictMon);try{localStorage.setItem('champ_mine',JSON.stringify(mine))}catch(e){}}
+const old=quickAnalyze;
+quickAnalyze=function(){sync();const out=old.apply(this,arguments);setTimeout(()=>{const r=document.getElementById('quickResult'),p=document.getElementById('quickPicks');if(!r||!p)return;let n=r.querySelector('.v202QuickSetNote');if(!n){n=document.createElement('div');n.className='v202QuickSetNote small';n.style.cssText='margin:0 0 10px;padding:8px 10px;border:1px solid var(--xline,#444);border-radius:10px;background:var(--xcard2,#222)';p.insertAdjacentElement('beforebegin',n)}n.textContent='自分側の持ち物・先制技・技範囲は「パーティ登録に保存した現在の型」だけで判定します。未登録の型は推測しません。';},0);return out};
+if(typeof metaCandidateScoreV9==='function'){const om=metaCandidateScoreV9;metaCandidateScoreV9=function(m){const x=om(m);try{const p=v12Profile(m);x.reasons=(x.reasons||[]).filter(r=>!/スカーフ/.test(r)||p.scarf>=20).filter(r=>!/先制技/.test(r)||p.priority>=20).map(r=>/スカーフ/.test(r)?`環境スカーフ採用 ${Math.round(p.scarf)}%`:/先制技/.test(r)?`環境先制技採用 ${Math.round(p.priority)}%`:r)}catch(e){}return x}}
+window.__V202_QUICK_TEST__={strict:strictMon({name:'__none__'}).set.item==='',priority:[{name:'かげうち'}].some(x=>['かげうち'].includes(x.name))};
+})();
+</script>
+
+
+<style>
+/* ===== v20.2 original clean home ===== */
+#homePage.v202Home{display:grid;gap:14px}.v202Hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:16px;padding:22px!important}.v202Eyebrow{font-size:10px;letter-spacing:.14em;font-weight:900;color:var(--xmuted,#999);margin-bottom:5px}.v202Hero h2{font-size:clamp(27px,3.6vw,42px);line-height:1.08;margin:0 0 9px}.v202Lead{max-width:720px;line-height:1.65;color:var(--xmuted,#999)}.v202Actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.v202Ready{border:1px solid var(--xline,#444);background:var(--xcard2,#222);border-radius:16px;padding:16px;display:flex;flex-direction:column;justify-content:center}.v202ReadyScore{font-size:48px;font-weight:950;letter-spacing:-.04em}.v202Grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:14px}.v202Head{display:flex;align-items:end;justify-content:space-between;gap:10px}.v202Head h2{margin:2px 0 0}.v202Party{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-top:12px}.v202Party .homePartyMon,.v202Party .homePartyEmpty{min-height:96px!important;background:var(--xcard2,#222)!important;border-color:var(--xline,#444)!important}.v202Party .homePartyMon img{width:64px;height:64px;image-rendering:auto!important}.v202Tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.v202Tools button{text-align:left;min-height:76px;padding:12px!important}.v202Tools button b{display:block;font-size:13px;margin-bottom:3px}.v202Tools button span{font-size:9px;color:var(--xmuted,#999)}.v202Meta{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px!important;margin-top:12px!important}.v202Meta .homeMetaMon{background:var(--xcard2,#222)!important;border-color:var(--xline,#444)!important}.v202Meta .homeMetaMon img{width:68px;height:68px;image-rendering:auto!important}.v202Stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.v202Stat{border:1px solid var(--xline,#444);background:var(--xcard,#222);border-radius:11px;padding:9px}.v202Stat strong{display:block;font-size:20px}@media(max-width:900px){.v202Hero,.v202Grid{grid-template-columns:1fr}.v202Party,.v202Meta{grid-template-columns:repeat(3,1fr)!important}}@media(max-width:520px){.v202Party,.v202Meta{grid-template-columns:repeat(2,1fr)!important}.v202Tools{grid-template-columns:1fr}}
+</style>
+<script>
+(function(){
+function build(){const h=document.getElementById('homePage');if(!h)return;h.classList.add('v202Home');h.innerHTML=`<section class="card v202Hero"><div><div class="v202Eyebrow">CHAMPIONS BATTLE DESK</div><h2>対戦前に見るものを、ここだけに。</h2><div id="homeNextText" class="v202Lead">保存状況から次の操作を整理します。</div><div class="v202Actions"><button id="homePrimaryAction" class="primary" onclick="homePrimaryAction()">おすすめの操作</button><button onclick="homeUseSavedQuick()">登録パーティで選出</button><button onclick="switchPage('build')">構築を確認</button></div></div><div class="v202Ready"><div class="small">READY</div><div id="homeSetupScore" class="v202ReadyScore">0%</div><div id="homeSetupLabel" class="small">準備状況</div><div class="compatBar"><div id="homeSetupBar" style="width:0%"></div></div><div id="v202Stats" class="v202Stats"></div></div></section><section class="v202Grid"><div class="card"><div class="v202Head"><div><div class="v202Eyebrow">MY SIX</div><h2>登録パーティ</h2></div><button onclick="switchPage('saved')">編集</button></div><div id="homePartyPreview" class="v202Party"></div><div id="homePartyHint" class="small" style="margin-top:8px"></div></div><div class="card"><div class="v202Head"><div><div class="v202Eyebrow">SHORTCUTS</div><h2>すぐ使う</h2></div></div><div class="v202Tools"><button onclick="homeUseSavedQuick()"><b>クイック選出</b><span>登録した型を使って選出</span></button><button onclick="switchPage('build')"><b>構築を改善</b><span>弱点と追加候補を見る</span></button><button onclick="homeFocusCounter()"><b>苦手対策</b><span>1体への安定回答を探す</span></button><button onclick="switchPage('env')"><b>環境データ</b><span>技・持ち物・共起を見る</span></button></div></div></section><section class="card"><div class="v202Head"><div><div class="v202Eyebrow">META NOW</div><h2>環境TOP 6</h2></div><button onclick="switchPage('env')">詳しく見る</button></div><div id="homeMetaTop" class="homeMetaTop v202Meta"></div></section>`}
+function extras(){const b=document.getElementById('v202Stats');if(!b)return;const n=(savedParty||[]).length,c=(savedParty||[]).filter(m=>String(m.item||'').trim()&&(m.moves||[]).filter(x=>x?.name).length===4).length;b.innerHTML=`<div class="v202Stat"><span class="small">登録</span><strong>${n}/6</strong></div><div class="v202Stat"><span class="small">型完成</span><strong>${c}/6</strong></div>`}
+build();if(typeof renderHomeV18==='function'){const old=renderHomeV18;renderHomeV18=function(){const r=old.apply(this,arguments);extras();return r};try{renderHomeV18()}catch(e){extras()}}else extras();
 })();
 </script>
 

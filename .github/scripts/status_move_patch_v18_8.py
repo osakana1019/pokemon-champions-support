@@ -1,0 +1,233 @@
+from pathlib import Path
+
+p = Path('index.html')
+s = p.read_text(encoding='utf-8')
+marker = '/* ===== v18.8: status moves are never attacking coverage ===== */'
+if marker in s:
+    raise SystemExit(0)
+
+s = s.replace('Pokémon Champions Support — v18.7', 'Pokémon Champions Support — v18.8')
+
+patch = r'''
+
+/* ===== v18.8: status moves are never attacking coverage ===== */
+const V188_STATUS_MOVE_NAMES=new Set([
+ 'はねやすめ','まもる','みがわり','じこさいせい','なまける','こうごうせい','あさのひざし','つきのひかり','ねむる','ちからをすいとる','みかづきのいのり',
+ 'ステルスロック','まきびし','どくびし','ねばねばネット','リフレクター','ひかりのかべ','オーロラベール',
+ 'つるぎのまい','りゅうのまい','わるだくみ','めいそう','ビルドアップ','ちょうのまい','からをやぶる','はらだいこ','てっぺき','のろい','きあいだめ','ロックカット',
+ 'あくび','ちょうはつ','アンコール','でんじは','おにび','どくどく','トリック','ほえる','ふきとばし','キノコのほうし','やどりぎのタネ','あまえる',
+ 'おいかぜ','トリックルーム','あまごい','にほんばれ','すなあらし','ゆきげしき','バトンタッチ','すてゼリフ','いかりのこな','このゆびとまれ',
+ 'どくのこな','しびれごな','ねむりごな','わたほうし','リサイクル','ロックオン','じこあんじ','いたみわけ','いちゃもん','ワンダールーム','マジックルーム',
+ 'きりばらい','コートチェンジ','いやしのねがい','みかづきのまい','いやしのすず','アロマセラピー','くろいきり','しろいきり','てだすけ','ワイドガード'
+]);
+const V188_STATUS_RAW=new Set([
+ 'roost','protect','substitute','recover','slackoff','synthesis','morningsun','moonlight','rest','strengthsap','lunarblessing',
+ 'stealthrock','spikes','toxicspikes','stickyweb','reflect','lightscreen','auroraveil',
+ 'swordsdance','dragondance','nastyplot','calmmind','bulkup','quiverdance','shellsmash','bellydrum','irondefense','curse','focusenergy',
+ 'yawn','taunt','encore','thunderwave','willowisp','toxic','trick','roar','whirlwind','spore','leechseed','charm',
+ 'tailwind','trickroom','raindance','sunnyday','sandstorm','snowscape','batonpass','partingshot','ragepowder','followme',
+ 'poisonpowder','stunspore','sleeppowder','cottonspore','recycle','lockon','psychup','painsplit','torment','wonderroom','magicroom',
+ 'defog','courtchange','healingwish','lunardance','healbell','aromatherapy','haze','mist','helpinghand','wideguard'
+]);
+const V188_MOVE_CATEGORY_CACHE=new Map();
+function v188MoveCategory(name,mon=null){
+ const n=String(name||'').trim();if(!n)return '';
+ const raw=normalizedDataId(n);
+ if(V188_STATUS_MOVE_NAMES.has(n)||V188_STATUS_RAW.has(raw))return 'status';
+ const direct=apiMoveInfo(n);
+ if(['status','physical','special'].includes(direct?.category))return direct.category;
+ const cached=V188_MOVE_CATEGORY_CACHE.get(n);if(cached)return cached;
+ if(mon){
+  const hit=moveSuggestionsFor(mon).find(x=>x.name===n);
+  if(['status','physical','special'].includes(hit?.category)){V188_MOVE_CATEGORY_CACHE.set(n,hit.category);return hit.category;}
+ }
+ try{
+  for(const list of Object.values(championsLearnsets||{})){
+   const hit=(list||[]).find(x=>x?.name===n);
+   if(['status','physical','special'].includes(hit?.category)){V188_MOVE_CATEGORY_CACHE.set(n,hit.category);return hit.category;}
+  }
+ }catch(e){}
+ return '';
+}
+function v188MoveElementType(name,mon=null,fallbackType=''){
+ const n=String(name||'').trim();
+ const direct=apiMoveInfo(n)?.type;if(direct&&direct!=='変化')return direct;
+ if(mon){const hit=moveSuggestionsFor(mon).find(x=>x.name===n);if(hit?.type&&hit.type!=='変化')return hit.type;}
+ return fallbackType&&fallbackType!=='変化'?fallbackType:'';
+}
+isStatusMove=function(name){return v188MoveCategory(name)==='status';};
+
+buildMoveProfile=function(m){
+ const moves=(m?.set?.moves||[]);
+ const named=moves.filter(x=>x?.name);
+ const names=named.map(x=>x.name);
+ const attacking=named.filter(x=>{
+  const cat=v188MoveCategory(x.name,m);
+  if(cat==='status')return false;
+  if(cat==='physical'||cat==='special')return true;
+  return x.type&&x.type!=='変化';
+ });
+ const types=attacking.map(x=>v188MoveElementType(x.name,m,x.type)).filter(Boolean);
+ return {
+  names,
+  types,
+  attackingMoves:attacking,
+  hasScreen:names.some(n=>['リフレクター','ひかりのかべ','オーロラベール'].includes(n)),
+  hasHazard:names.some(n=>['ステルスロック','まきびし','どくびし','ねばねばネット'].includes(n)),
+  hasDisrupt:names.some(n=>['あくび','ちょうはつ','アンコール','でんじは','おにび','どくどく','キノコのほうし','ほえる','ふきとばし'].includes(n)),
+  hasSetup:names.some(n=>['つるぎのまい','りゅうのまい','わるだくみ','めいそう','ビルドアップ','ちょうのまい','からをやぶる','はらだいこ','てっぺき'].includes(n)),
+  hasRecovery:names.some(n=>['じこさいせい','なまける','はねやすめ','こうごうせい','あさのひざし','つきのひかり','ねむる','ちからをすいとる','みかづきのいのり'].includes(n)),
+  hasPriority:names.some(n=>['かげうち','しんそく','ふいうち','マッハパンチ','アクアジェット','こおりのつぶて','バレットパンチ','でんこうせっか','アクセルロック'].includes(n)),
+  hasPivot:names.some(n=>['とんぼがえり','ボルトチェンジ','クイックターン','すてゼリフ'].includes(n))
+ };
+};
+
+monAttackTypesForThreat=function(m){
+ const p=buildMoveProfile(m);
+ if(p.types.length)return [...new Set(p.types)];
+ const hasRegisteredMoves=(m?.set?.moves||[]).some(x=>x?.name);
+ if(hasRegisteredMoves)return [];
+ return [m.t1,m.t2].filter(t=>t&&t!=='なし');
+};
+
+envThreatSummary=function(mon){
+ const d=envData(mon);
+ const topMoves=d.moves.slice(0,4);
+ const topItems=d.items.slice(0,3);
+ const moveTypes=topMoves.filter(x=>v188MoveCategory(x.name,mon)!=='status').map(x=>apiMoveInfo(x.name)?.type||envMoveType(mon.name,x.name)).filter(Boolean);
+ return {topMoves,topItems,moveTypes};
+};
+
+v12Profile=function(mon){
+ if(!mon)return null;
+ const old=V12_PROFILE_CACHE.get(mon.name);if(old)return old;
+ const d=envData(mon),st=getBulkStats(mon);
+ const moves=(d.moves||[]).slice(0,12),items=(d.items||[]).slice(0,10),abilities=(d.abilities||[]).slice(0,8),natures=(d.natures||[]).slice(0,10),spreads=(d.spreads||[]).slice(0,10),teammates=(d.teammates||[]).slice(0,12);
+ const attackTypes=new Map();let phys=0,spec=0,status=0,attackRows=0,unknownRows=0;
+ for(const r of moves){
+  const pct=v12Pct(r),info=apiMoveInfo(r.name),cat=v188MoveCategory(r.name,mon),type=info?.type||envMoveType(mon.name,r.name);
+  if(cat==='status'){status+=pct||8;continue;}
+  if(cat==='physical'){phys+=pct||8;attackRows++;}
+  else if(cat==='special'){spec+=pct||8;attackRows++;}
+  else {unknownRows++;}
+  if(type&&type!=='変化')attackTypes.set(type,Math.max(attackTypes.get(type)||0,pct||12));
+ }
+ if(!attackTypes.size&&(!moves.length||unknownRows>0)){
+  [mon.t1,mon.t2].filter(t=>t&&t!=='なし').forEach(t=>attackTypes.set(t,35));
+ }
+ const spread=v12WeightedSpread(spreads),nature=v12NatureSignals(natures);
+ const hazard=v12MaxMoveRate(moves,V12_HAZARD_MOVES,V12_RAW_MOVE_GROUPS.hazard);
+ const removal=v12MaxMoveRate(moves,V12_REMOVE_MOVES,V12_RAW_MOVE_GROUPS.removal);
+ const setup=v12MaxMoveRate(moves,V12_SETUP_MOVES,V12_RAW_MOVE_GROUPS.setup);
+ const recovery=v12MaxMoveRate(moves,V12_RECOVERY_MOVES,V12_RAW_MOVE_GROUPS.recovery);
+ const pivot=v12MaxMoveRate(moves,V12_PIVOT_MOVES,V12_RAW_MOVE_GROUPS.pivot);
+ const priority=v12MaxMoveRate(moves,V12_PRIORITY_MOVES,V12_RAW_MOVE_GROUPS.priority);
+ const disrupt=v12MaxMoveRate(moves,V12_DISRUPT_MOVES,V12_RAW_MOVE_GROUPS.disrupt);
+ const screen=v12MaxMoveRate(moves,V12_SCREEN_MOVES,V12_RAW_MOVE_GROUPS.screen);
+ const speedControl=v12MaxMoveRate(moves,V12_SPEED_CONTROL_MOVES,V12_RAW_MOVE_GROUPS.speedControl);
+ const scarf=v12TopItemPct({items},['choicescarf'],['こだわりスカーフ']);
+ const sash=v12TopItemPct({items},['focussash'],['きあいのタスキ']);
+ const recoveryItem=Math.max(v12TopItemPct({items},['leftovers'],['たべのこし']),v12TopItemPct({items},['sitrusberry'],['オボンのみ']));
+ const choiceBand=v12TopItemPct({items},['choiceband'],['こだわりハチマキ']);
+ const choiceSpecs=v12TopItemPct({items},['choicespecs'],['こだわりメガネ']);
+ const moveTotal=phys+spec,physShare=moveTotal?phys/moveTotal:((st.atk||0)>(st.spa||0)?.65:.35),specShare=1-physShare;
+ const bulk=Math.sqrt((st.hp*st.def)*(st.hp*st.spd))/100;
+ const speedIndex=(st.spe||70)+(spread.valid?spread.spe*.72:0)+Math.min(26,scarf*.28)+Math.min(8,nature.spe*.08)+Math.min(5,speedControl*.05);
+ const offenseIndex=Math.max((st.atk||80)*(0.55+physShare*.45),(st.spa||80)*(0.55+specShare*.45));
+ const completeness=[moves,items,abilities,natures,spreads,teammates].filter(x=>x.length).length/6;
+ const hasAttackEvidence=attackTypes.size>0||attackRows>0;
+ const profile={mon,d,st,moves,items,abilities,natures,spreads,teammates,attackTypes,spread,nature,hazard,removal,setup,recovery,pivot,priority,disrupt,screen,speedControl,scarf,sash,recoveryItem,choiceBand,choiceSpecs,physShare,specShare,bulk,speedIndex,offenseIndex,completeness,rank:d.rank||mon.usageRank||null,statusShare:status,hasAttackEvidence};
+ profile.isFast=speedIndex>=108||scarf>=15||priority>=35;
+ profile.isPhysical=hasAttackEvidence&&(physShare>=.6||spread.atk>=20||choiceBand>=18);
+ profile.isSpecial=hasAttackEvidence&&(specShare>=.6||spread.spa>=20||choiceSpecs>=18);
+ profile.isWall=(bulk>=92&&(recovery>=18||recoveryItem>=22))||spread.def+spread.spd+spread.hp>=52;
+ profile.isWincon=setup>=15||buildEffectiveRole(mon)==='積みエース'||buildEffectiveRole(mon)==='崩し';
+ profile.isSupport=Math.max(hazard,removal,pivot,disrupt,screen,recovery)>=15;
+ V12_PROFILE_CACHE.set(mon.name,profile);return profile;
+};
+
+v12OffenseEff=function(attacker,defender){
+ const rows=v12MoveTypeRows(attacker);if(!rows.length)return {eff:0,type:null};
+ let best=0,bestType=null;
+ for(const r of rows){const eff=v12Incoming(defender,r.type);const certainty=.55+.45*v12Clamp((r.pct||20)/60);const val=eff*certainty;if(val>best){best=val;bestType=r.type;}}
+ return {eff:best,type:bestType};
+};
+v12DefenseVs=function(attacker,defender){
+ const rows=v12MoveTypeRows(attacker);
+ if(!rows.length)return {avg:0,worst:0,worstType:null,score:1};
+ let sum=0,wSum=0,worst=0,worstType=null;
+ for(const r of rows){const w=Math.max(.18,v12Clamp((r.pct||20)/55));const x=v12Incoming(defender,r.type);sum+=x*w;wSum+=w;if(x>worst){worst=x;worstType=r.type;}}
+ const avg=wSum?sum/wSum:1,dp=v12Profile(defender);let score=v12Clamp((1.85-avg)/1.45);
+ score*=v12Clamp(.72+(dp.bulk/105)*.28,.72,1.08);
+ const ap=v12Profile(attacker),unaware=v12TopAbilityPct(dp,['unaware'],['てんねん']);
+ if(ap.setup>=20&&(unaware>=20||dp.disrupt>=25))score=Math.min(1,score+.12);
+ return {avg,worst,worstType,score:v12Clamp(score)};
+};
+
+if(typeof v185TopIncomingMoveRisk==='function'){
+ v185TopIncomingMoveRisk=function(candidate,threat){
+  const tp=v12Profile(threat);let best={rate:0,mult:1,name:'',type:'',value:0};
+  for(const r of (tp?.moves||[])){
+   const cat=v188MoveCategory(r.name,threat);if(cat==='status')continue;
+   const info=apiMoveInfo(r.name),type=info?.type||envMoveType(threat.name,r.name)||'';
+   if(!type)continue;
+   const rate=v12Pct(r),multv=dmg(candidate,type),value=(rate||8)*Math.max(.2,multv);
+   if(value>best.value)best={rate,mult:multv,name:displayEnvTerm('moves',r.name)||r.name,type,value};
+  }
+  return best;
+ };
+}
+
+function v188NormalizeSavedMoves(save=true){
+ let changed=false;
+ for(const s of (savedParty||[])){
+  const mon=mons.find(m=>m.name===s.name)||s;
+  for(const mv of (s.moves||[])){
+   if(!mv?.name)continue;
+   const cat=v188MoveCategory(mv.name,mon);
+   if(cat==='status'&&mv.type!=='変化'){mv.type='変化';changed=true;continue;}
+   if(cat==='physical'||cat==='special'){
+    const t=v188MoveElementType(mv.name,mon,mv.type);
+    if(t&&mv.type!==t){mv.type=t;changed=true;}
+   }
+  }
+ }
+ if(changed&&save)saveSavedParty();
+ return changed;
+}
+const _v188UpdateSavedMove=updateSavedMove;
+updateSavedMove=function(i,j,key,v){
+ _v188UpdateSavedMove(i,j,key,v);
+ if(key==='name'&&savedParty[i]?.moves?.[j]){
+  v188NormalizeSavedMoves(true);
+  renderSavedEditors();renderSavedCompletion();
+ }
+};
+const _v188EvaluateSavedParty=evaluateSavedParty;
+evaluateSavedParty=function(){v188NormalizeSavedMoves(true);return _v188EvaluateSavedParty();};
+
+function runV188SelfTests(){
+ const tests=[],ok=(n,c)=>tests.push([n,!!c]);
+ ok('Roost is status',v188MoveCategory('はねやすめ')==='status');
+ ok('Protect is status',v188MoveCategory('まもる')==='status');
+ ok('Stealth Rock is status',v188MoveCategory('ステルスロック')==='status');
+ const fake={name:'v188-fake',t1:'ひこう',t2:'なし',role:'サポート',spd:'B',set:{moves:[{name:'はねやすめ',type:'ひこう'}]}};
+ ok('Roost excluded from build attack types',buildMoveProfile(fake).types.length===0);
+ ok('registered status-only set has no fallback attack',monAttackTypesForThreat(fake).length===0);
+ const passed=tests.filter(x=>x[1]).length;
+ window.__V188_SELFTEST__={passed,total:tests.length,tests};
+ document.documentElement.setAttribute('data-v188-selftest',`${passed===tests.length?'ok':'fail'}-${passed}/${tests.length}`);
+ if(passed!==tests.length)console.error('v18.8 self-test failed',tests);
+ return window.__V188_SELFTEST__;
+}
+V12_PROFILE_CACHE.clear();
+v188NormalizeSavedMoves(true);
+runV188SelfTests();
+try{renderSavedEditors();renderSavedCompletion();renderTeamCompletion();}catch(e){console.warn('v18.8 refresh',e);}
+'''
+
+needle = '\n</script></body></html>'
+if needle not in s:
+    raise SystemExit('script end marker not found')
+s = s.replace(needle, patch + needle, 1)
+p.write_text(s, encoding='utf-8')

@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pokémon Champions Support — v18.10</title>
+<title>Pokémon Champions Support — v18.11</title>
 <meta name="description" content="Pokémon Championsの環境データを使ったパーティ構築・クイック選出・対策候補・環境分析ツール">
 <meta name="application-name" content="Pokémon Champions Support">
 <meta name="color-scheme" content="dark">
-<meta property="og:title" content="Pokémon Champions Support — v18.10">
+<meta property="og:title" content="Pokémon Champions Support — v18.11">
 <meta property="og:description" content="環境データ連動のパーティ構築・選出・対策支援ツール">
 
 <style>
@@ -4367,7 +4367,7 @@ function v12CandidateScore(c,ctx){
  const u=ctx.utility;
  const addNeed=(need,val,max,reason)=>{if(need&&val>=15){role+=max*v12Clamp(val/45,.45,1);if(reason)reasons.push(reason)}};
  addNeed(u.hazard<15,cp.hazard,2.6,'ステルスロック等の展開役を補完');
- addNeed(u.removal<15,cp.removal,3.2,'場の除去手段を補完');
+ addNeed(u.removal<15,cp.removal,.6,null);
  addNeed(u.pivot<15,cp.pivot,2.0,'対面操作を補完');
  addNeed(u.recovery<15,cp.recovery,1.8,'回復による安定感を補完');
  addNeed(u.setup<15,cp.setup,2.7,'明確な勝ち筋を追加');
@@ -4394,14 +4394,14 @@ function v12TeamCompletion(team){
  const meta=30*ctx.metaScore;
  const sev=ctx.typeGaps.reduce((s,g)=>s+g.severity,0);const defense=15*v12Clamp(1-sev/3.2);
  let sumW=0,offW=0;for(const x of ctx.threats){let best=0;for(const m of team)best=Math.max(best,v12MemberVsThreat(m,x.m).off);sumW+=x.w;offW+=best*x.w;}const offense=15*(sumW?offW/sumW:.5);
- const u=ctx.utility;const utilityChecks=[[u.hazard,1.4],[u.removal,1.7],[u.pivot,1.0],[u.recovery,1.1],[u.setup,1.5],[u.disrupt,1.1],[u.priority,1.0],[u.phys?40:0,1.1],[u.spec?40:0,1.1]];let utilityRaw=0,utilityMax=0;for(const [v,w] of utilityChecks){utilityRaw+=w*v12Clamp(v/30);utilityMax+=w;}const role=15*(utilityMax?utilityRaw/utilityMax:0);
+ const u=ctx.utility;const utilityChecks=[[u.hazard,1.4],[u.removal,.35],[u.pivot,1.0],[u.recovery,1.1],[u.setup,1.5],[u.disrupt,1.1],[u.priority,1.0],[u.phys?40:0,1.1],[u.spec?40:0,1.1]];let utilityRaw=0,utilityMax=0;for(const [v,w] of utilityChecks){utilityRaw+=w*v12Clamp(v/30);utilityMax+=w;}const role=15*(utilityMax?utilityRaw/utilityMax:0);
  const ps=team.map(v12Profile);const fastCount=ps.filter(p=>p.isFast).length;const topSpeed=[...ps].sort((a,b)=>b.speedIndex-a.speedIndex).slice(0,2).reduce((s,p)=>s+v12Clamp((p.speedIndex-65)/80),0);const speed=10*v12Clamp(topSpeed/1.5+(fastCount>=2?.15:0));
  let setfit=10;const itemCounts={};team.forEach(m=>{const it=(buildItems[m.name]||'').trim();if(it)itemCounts[it]=(itemCounts[it]||0)+1;});for(const n of Object.values(itemCounts))if(n>1)setfit-=(n-1)*2.5;const megaCount=team.filter(m=>m.mega).length;if(megaCount>2)setfit-=(megaCount-2)*4;const completeness=ps.reduce((s,p)=>s+p.completeness,0)/ps.length;setfit=setfit*.68+completeness*3.2;setfit=v12Clamp(setfit,0,10);
  let pairTotal=0,pairN=0;for(let i=0;i<team.length;i++)for(let j=i+1;j<team.length;j++){pairTotal+=v12PairSynergy(team[i],team[j]).score;pairN++;}const synergy=5*v12Clamp((pairN?pairTotal/pairN:0)/.55);
  const total=Math.round(v12Clamp(meta+defense+offense+role+speed+setfit+synergy,0,100));
  const worst=ctx.threats.slice().sort((a,b)=>(1-b.answer)*b.w-(1-a.answer)*a.w).slice(0,4).filter(x=>x.answer<.62);if(worst.length)advice.push(`環境上位で重め：${worst.map(x=>x.m.name).join('・')}`);
  const open=ctx.typeGaps.filter(x=>x.severity>.18).slice(0,3);if(open.length)advice.push(`一貫注意：${open.map(x=>x.t).join('・')}`);
- if(u.removal<15)advice.push('ステロ・まきびし対策（きりばらい/スピン系）が薄い');if(u.setup<15)advice.push('明確な積み/勝ち筋が薄い');if(u.fast<1&&u.priority<15&&u.speedControl<15)advice.push('高速相手への切り返し手段が少ない');if(u.phys===0||u.spec===0)advice.push(u.phys===0?'物理方面の圧力が不足':'特殊方面の圧力が不足');if(u.pivot<15)advice.push('対面操作が少なく有利対面を作りにくい');if(Object.values(itemCounts).some(n=>n>1))advice.push('持ち物が重複している');if(megaCount>2)advice.push('メガ枠は2体以内にしたい');
+ if(u.setup<15)advice.push('明確な積み/勝ち筋が薄い');if(u.fast<1&&u.priority<15&&u.speedControl<15)advice.push('高速相手への切り返し手段が少ない');if(u.phys===0||u.spec===0)advice.push(u.phys===0?'物理方面の圧力が不足':'特殊方面の圧力が不足');if(u.pivot<15)advice.push('対面操作が少なく有利対面を作りにくい');if(Object.values(itemCounts).some(n=>n>1))advice.push('持ち物が重複している');if(megaCount>2)advice.push('メガ枠は2体以内にしたい');
  return {total,breakdown:{meta,defense,offense,role,speed,setfit,synergy},advice:[...new Set(advice)].slice(0,6),ctx};
 }
 function v12RenderTeamCompletion(){
@@ -4883,9 +4883,9 @@ async function v15AnalyzeBuild(){
   if(buildTeam.length<2){buildSummary.textContent='2匹以上登録してください。';buildSuggestions.innerHTML='';analyzeBuildThreats();return;}
   const btn=document.getElementById('buildAnalyzeBtn'),status=document.getElementById('buildMetaStatus');if(btn){btn.disabled=true;btn.textContent='環境データを総合分析中…';}if(status)status.textContent='通常/メガ形態とメガストーン使用率まで確認しています…';
   let metaLoad={loaded:0,total:0};try{metaLoad=await v12PrepareBuildData();}catch(e){console.warn('v15 build preload',e);}V12_PROFILE_CACHE.clear();
-  const ctx=v12TeamContext(buildTeam);window.__V12_BUILD_CONTEXT__=ctx;const best=new Map(),allMega=[];
+  const ctx=v12TeamContext(buildTeam);window.__V12_BUILD_CONTEXT__=ctx;const best=new Map(),allMega=[],currentMegaCount=v15BuildMegaCount();
   for(const m of mons){
-    if(buildTeam.some(x=>sameSpecies(x,m)))continue;const pol=v14FormPolicy(m);if(pol.hardExclude)continue;
+    if(buildTeam.some(x=>sameSpecies(x,m)))continue;if(m.mega&&currentMegaCount>=2)continue;const pol=v14FormPolicy(m);if(pol.hardExclude)continue;
     try{let x={m,...v12CandidateScore(m,ctx)};x=v14BuildAdjusted(x);const k=speciesKey(m),old=best.get(k);if(!old||x.s>old.s)best.set(k,x);if(m.mega)allMega.push(x);}catch(e){console.warn('v15 candidate',m.name,e);}
   }
   let scored=[...best.values()].sort((a,b)=>b.s-a.s||((v12Profile(a.m)?.rank||999)-(v12Profile(b.m)?.rank||999)));allMega.sort((a,b)=>b.s-a.s);
@@ -5444,4 +5444,86 @@ v188NormalizeSavedMoves(true);
 runV188SelfTests();
 try{renderSavedEditors();renderSavedCompletion();renderTeamCompletion();}catch(e){console.warn('v18.8 refresh',e);}
 
-</script></body></html>
+</script><script>
+/* ===== v18.11: reliable builder + practical recommendation policy ===== */
+(function(){
+  function v1811PersistBuild(){
+    localStorage.setItem('champ_build',JSON.stringify(buildTeam));
+    localStorage.setItem('champ_build_items',JSON.stringify(buildItems));
+  }
+  addBuild=function(name){
+    const m=mons.find(x=>x.name===name);
+    if(!m)return;
+    const exact=buildTeam.findIndex(x=>x.name===name);
+    if(exact>=0){
+      const removed=buildTeam[exact];
+      buildTeam.splice(exact,1);
+      if(removed?.name)delete buildItems[removed.name];
+    }else{
+      const key=speciesKey(m);
+      const same=buildTeam.find(x=>speciesKey(x)===key);
+      if(same){alert(`${same.name} と ${m.name} は同じ種族なので同時には登録できません。`);return;}
+      if(buildTeam.length>=6){alert('6匹までです');return;}
+      buildTeam.push({...m});
+      if(m.mega)buildItems[m.name]=megaStoneFor(m);
+    }
+    v1811PersistBuild();
+    try{V12_PROFILE_CACHE.clear();}catch(e){}
+    renderBuildCurrent();
+    renderBuildRoster();
+    try{renderTeamCompletion();}catch(e){}
+    try{renderHomeV18();}catch(e){}
+  };
+  renderBuildRoster=function(){
+    if(!buildRoster)return;
+    const q=normalizePokemonSearch((buildSearch?.value||'').trim());
+    const filtered=mons.filter(m=>!q||normalizePokemonSearch(m.name).includes(q));
+    const action=m=>{
+      const safe=String(m.name).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      return `<div class="monActions" style="grid-template-columns:1fr"><button type="button" class="mineAdd" data-v1811-build="${safe}">${buildTeam.some(x=>x.name===m.name)?'解除':'構築＋'}</button></div>`;
+    };
+    buildRoster.innerHTML=sortBrowseMons(filtered,browseSort.build).map(m=>browseCard(m,action(m))).join('');
+    buildRoster.querySelectorAll('[data-v1811-build]').forEach(btn=>{
+      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();addBuild(btn.dataset.v1811Build);});
+    });
+  };
+  addSavedMon=function(name){return addSaved(name);};
+  renderSavedRoster=function(){
+    if(!savedRoster)return;
+    const q=normalizePokemonSearch((savedSearch?.value||'').trim());
+    const filtered=mons.filter(m=>!q||normalizePokemonSearch(m.name).includes(q));
+    const action=m=>{
+      const safe=String(m.name).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      return `<div class="monActions" style="grid-template-columns:1fr"><button type="button" class="mineAdd" data-v1811-saved="${safe}">${savedParty.some(x=>x.name===m.name)?'解除':'登録＋'}</button></div>`;
+    };
+    savedRoster.innerHTML=sortBrowseMons(filtered,browseSort.saved).map(m=>browseCard(m,action(m))).join('');
+    savedRoster.querySelectorAll('[data-v1811-saved]').forEach(btn=>{
+      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();addSaved(btn.dataset.v1811Saved);});
+    });
+  };
+  const v1811PreviousFormPolicy=v14FormPolicy;
+  v14FormPolicy=function(m){
+    const base=v1811PreviousFormPolicy(m);
+    if(!m||m.mega||!base.hasMega)return base;
+    if(typeof baseFormViable!=='undefined'&&baseFormViable.has(m.name))return base;
+    const rows=(envData(m)?.items||[]).slice(0,20);
+    const megas=v14MegaFormsFor(m);
+    let nonMegaMax=0,nonMegaSum=0,megaSum=0,hasPct=false;
+    for(const row of rows){
+      const pct=v14ItemPct(row);if(pct>0)hasPct=true;
+      const isMega=megas.some(mg=>typeof v15StoneMatchesRow==='function'&&v15StoneMatchesRow(row,mg));
+      if(isMega)megaSum+=pct;
+      else {nonMegaMax=Math.max(nonMegaMax,pct);nonMegaSum+=pct;}
+    }
+    const provenNonMega=hasPct&&(nonMegaMax>=35||nonMegaSum>=55);
+    if(provenNonMega)return {...base,hardExclude:false,evidence:Math.max(base.evidence,.9),reason:`通常形態の採用実績あり（最大 ${v15FmtPct(nonMegaMax)}）`};
+    return {...base,hardExclude:true,evidence:Math.min(base.evidence,.12),reason:megaSum>0?`メガ前提の採用傾向（メガ石 ${v15FmtPct(megaSum)}）`:'メガ形態前提で、通常形態の独立した採用根拠が弱い'};
+  };
+  v14RecommendableForm=function(m){return !v14FormPolicy(m).hardExclude;};
+  try{renderBuildRoster();}catch(e){console.error('v18.11 build roster',e);}
+  try{renderSavedRoster();}catch(e){console.error('v18.11 saved roster',e);}
+  window.__V1811_SELFTEST__={buildAdd:typeof addBuild==='function',savedAlias:typeof addSavedMon==='function',formPolicy:typeof v14FormPolicy==='function'};
+  document.documentElement.setAttribute('data-v1811-selftest',Object.values(window.__V1811_SELFTEST__).every(Boolean)?'ok':'fail');
+})();
+</script>
+</body></html>

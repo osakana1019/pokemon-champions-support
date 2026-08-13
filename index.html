@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pokémon Champions Support — v18.9</title>
+<title>Pokémon Champions Support — v18.10</title>
 <meta name="description" content="Pokémon Championsの環境データを使ったパーティ構築・クイック選出・対策候補・環境分析ツール">
 <meta name="application-name" content="Pokémon Champions Support">
 <meta name="color-scheme" content="dark">
-<meta property="og:title" content="Pokémon Champions Support — v18.9">
+<meta property="og:title" content="Pokémon Champions Support — v18.10">
 <meta property="og:description" content="環境データ連動のパーティ構築・選出・対策支援ツール">
 
 <style>
@@ -4173,7 +4173,7 @@ if(!selfTestEnvDetail()){
 
 /* ===== CLEAN v12: holistic environment-aware team builder ===== */
 const V12_HAZARD_MOVES=new Set(['ステルスロック','まきびし','どくびし','ねばねばネット']);
-const V12_REMOVE_MOVES=new Set(['こうそくスピン','きりばらい','コートチェンジ']);
+const V12_REMOVE_MOVES=new Set(['きりばらい','こうそくスピン','キラースピン','おかたづけ']);
 const V12_SETUP_MOVES=new Set(['つるぎのまい','りゅうのまい','わるだくみ','めいそう','ビルドアップ','ちょうのまい','からをやぶる','はらだいこ','てっぺき','のろい']);
 const V12_RECOVERY_MOVES=new Set(['じこさいせい','なまける','はねやすめ','こうごうせい','あさのひざし','つきのひかり','ねむる','ちからをすいとる','みかづきのいのり']);
 const V12_PIVOT_MOVES=new Set(['とんぼがえり','ボルトチェンジ','クイックターン','すてゼリフ']);
@@ -4183,7 +4183,7 @@ const V12_SCREEN_MOVES=new Set(['リフレクター','ひかりのかべ','オ�
 const V12_SPEED_CONTROL_MOVES=new Set(['でんじは','こごえるかぜ','エレキネット','おいかぜ','トリックルーム','がんせきふうじ']);
 const V12_RAW_MOVE_GROUPS={
  hazard:new Set(['stealthrock','spikes','toxicspikes','stickyweb']),
- removal:new Set(['rapidspin','defog','courtchange']),
+ removal:new Set(['defog','rapidspin','mortalspin','tidyup']),
  setup:new Set(['swordsdance','dragondance','nastyplot','calmmind','bulkup','quiverdance','shellsmash','bellydrum','irondefense','curse']),
  recovery:new Set(['recover','slackoff','roost','synthesis','morningsun','moonlight','rest','strengthsap','lunarblessing']),
  pivot:new Set(['uturn','voltswitch','flipturn','partingshot']),
@@ -4401,7 +4401,7 @@ function v12TeamCompletion(team){
  const total=Math.round(v12Clamp(meta+defense+offense+role+speed+setfit+synergy,0,100));
  const worst=ctx.threats.slice().sort((a,b)=>(1-b.answer)*b.w-(1-a.answer)*a.w).slice(0,4).filter(x=>x.answer<.62);if(worst.length)advice.push(`環境上位で重め：${worst.map(x=>x.m.name).join('・')}`);
  const open=ctx.typeGaps.filter(x=>x.severity>.18).slice(0,3);if(open.length)advice.push(`一貫注意：${open.map(x=>x.t).join('・')}`);
- if(u.removal<15)advice.push('ステルスロック・まきびし等の除去手段が薄い');if(u.setup<15)advice.push('明確な積み/勝ち筋が薄い');if(u.fast<1&&u.priority<15&&u.speedControl<15)advice.push('高速相手への切り返し手段が少ない');if(u.phys===0||u.spec===0)advice.push(u.phys===0?'物理方面の圧力が不足':'特殊方面の圧力が不足');if(u.pivot<15)advice.push('対面操作が少なく有利対面を作りにくい');if(Object.values(itemCounts).some(n=>n>1))advice.push('持ち物が重複している');if(megaCount>2)advice.push('メガ枠は2体以内にしたい');
+ if(u.removal<15)advice.push('ステロ・まきびし対策（きりばらい/スピン系）が薄い');if(u.setup<15)advice.push('明確な積み/勝ち筋が薄い');if(u.fast<1&&u.priority<15&&u.speedControl<15)advice.push('高速相手への切り返し手段が少ない');if(u.phys===0||u.spec===0)advice.push(u.phys===0?'物理方面の圧力が不足':'特殊方面の圧力が不足');if(u.pivot<15)advice.push('対面操作が少なく有利対面を作りにくい');if(Object.values(itemCounts).some(n=>n>1))advice.push('持ち物が重複している');if(megaCount>2)advice.push('メガ枠は2体以内にしたい');
  return {total,breakdown:{meta,defense,offense,role,speed,setfit,synergy},advice:[...new Set(advice)].slice(0,6),ctx};
 }
 function v12RenderTeamCompletion(){

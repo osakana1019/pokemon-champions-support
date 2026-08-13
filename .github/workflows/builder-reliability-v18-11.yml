@@ -19,145 +19,31 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import base64
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
           marker='/* ===== v18.11: reliable builder + practical recommendation policy ===== */'
           if marker in s:
               raise SystemExit(0)
-
           s=s.replace('Pokémon Champions Support — v18.10','Pokémon Champions Support — v18.11')
-
-          # Hazard removal is uncommon in the current environment. Keep it as a small bonus,
-          # not a required role or a recurring construction warning.
           old="addNeed(u.removal<15,cp.removal,3.2,'場の除去手段を補完');"
           new="addNeed(u.removal<15,cp.removal,.6,null);"
-          if old not in s:
-              raise SystemExit('candidate removal weight marker not found')
+          if old not in s: raise SystemExit('candidate removal weight marker not found')
           s=s.replace(old,new,1)
-
           old="const utilityChecks=[[u.hazard,1.4],[u.removal,1.7],[u.pivot,1.0],[u.recovery,1.1],[u.setup,1.5],[u.disrupt,1.1],[u.priority,1.0],[u.phys?40:0,1.1],[u.spec?40:0,1.1]];"
           new="const utilityChecks=[[u.hazard,1.4],[u.removal,.35],[u.pivot,1.0],[u.recovery,1.1],[u.setup,1.5],[u.disrupt,1.1],[u.priority,1.0],[u.phys?40:0,1.1],[u.spec?40:0,1.1]];"
-          if old not in s:
-              raise SystemExit('team removal weight marker not found')
+          if old not in s: raise SystemExit('team removal weight marker not found')
           s=s.replace(old,new,1)
-
           old="if(u.removal<15)advice.push('ステロ・まきびし対策（きりばらい/スピン系）が薄い');if(u.setup<15)"
           new="if(u.setup<15)"
-          if old not in s:
-              raise SystemExit('removal advice marker not found')
+          if old not in s: raise SystemExit('removal advice marker not found')
           s=s.replace(old,new,1)
-
-          # If two Mega slots are already occupied, do not recommend a third Mega candidate.
           old="const ctx=v12TeamContext(buildTeam);window.__V12_BUILD_CONTEXT__=ctx;const best=new Map(),allMega=[];\n  for(const m of mons){\n    if(buildTeam.some(x=>sameSpecies(x,m)))continue;const pol=v14FormPolicy(m);if(pol.hardExclude)continue;"
           new="const ctx=v12TeamContext(buildTeam);window.__V12_BUILD_CONTEXT__=ctx;const best=new Map(),allMega=[],currentMegaCount=v15BuildMegaCount();\n  for(const m of mons){\n    if(buildTeam.some(x=>sameSpecies(x,m)))continue;if(m.mega&&currentMegaCount>=2)continue;const pol=v14FormPolicy(m);if(pol.hardExclude)continue;"
-          if old not in s:
-              raise SystemExit('v15 candidate loop marker not found')
+          if old not in s: raise SystemExit('v15 candidate loop marker not found')
           s=s.replace(old,new,1)
-
-          patch=r'''
-<script>
-/* ===== v18.11: reliable builder + practical recommendation policy ===== */
-(function(){
-  function v1811PersistBuild(){
-    localStorage.setItem('champ_build',JSON.stringify(buildTeam));
-    localStorage.setItem('champ_build_items',JSON.stringify(buildItems));
-  }
-
-  // Rebuild add/remove logic without relying on fragile inline event state.
-  addBuild=function(name){
-    const m=mons.find(x=>x.name===name);
-    if(!m)return;
-    const exact=buildTeam.findIndex(x=>x.name===name);
-    if(exact>=0){
-      const removed=buildTeam[exact];
-      buildTeam.splice(exact,1);
-      if(removed?.name)delete buildItems[removed.name];
-    }else{
-      const key=speciesKey(m);
-      const same=buildTeam.find(x=>speciesKey(x)===key);
-      if(same){alert(`${same.name} と ${m.name} は同じ種族なので同時には登録できません。`);return;}
-      if(buildTeam.length>=6){alert('6匹までです');return;}
-      buildTeam.push({...m});
-      if(m.mega)buildItems[m.name]=megaStoneFor(m);
-    }
-    v1811PersistBuild();
-    try{V12_PROFILE_CACHE.clear();}catch(e){}
-    renderBuildCurrent();
-    renderBuildRoster();
-    try{renderTeamCompletion();}catch(e){}
-    try{renderHomeV18();}catch(e){}
-  };
-
-  renderBuildRoster=function(){
-    if(!buildRoster)return;
-    const q=normalizePokemonSearch((buildSearch?.value||'').trim());
-    const filtered=mons.filter(m=>!q||normalizePokemonSearch(m.name).includes(q));
-    const action=m=>{
-      const safe=String(m.name).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-      return `<div class="monActions" style="grid-template-columns:1fr"><button type="button" class="mineAdd" data-v1811-build="${safe}">${buildTeam.some(x=>x.name===m.name)?'解除':'構築＋'}</button></div>`;
-    };
-    buildRoster.innerHTML=sortBrowseMons(filtered,browseSort.build).map(m=>browseCard(m,action(m))).join('');
-    buildRoster.querySelectorAll('[data-v1811-build]').forEach(btn=>{
-      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();addBuild(btn.dataset.v1811Build);});
-    });
-  };
-
-  // The saved-party roster historically calls addSavedMon; guarantee that alias exists and
-  // use normal event listeners there as well.
-  addSavedMon=function(name){return addSaved(name);};
-  renderSavedRoster=function(){
-    if(!savedRoster)return;
-    const q=normalizePokemonSearch((savedSearch?.value||'').trim());
-    const filtered=mons.filter(m=>!q||normalizePokemonSearch(m.name).includes(q));
-    const action=m=>{
-      const safe=String(m.name).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-      return `<div class="monActions" style="grid-template-columns:1fr"><button type="button" class="mineAdd" data-v1811-saved="${safe}">${savedParty.some(x=>x.name===m.name)?'解除':'登録＋'}</button></div>`;
-    };
-    savedRoster.innerHTML=sortBrowseMons(filtered,browseSort.saved).map(m=>browseCard(m,action(m))).join('');
-    savedRoster.querySelectorAll('[data-v1811-saved]').forEach(btn=>{
-      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();addSaved(btn.dataset.v1811Saved);});
-    });
-  };
-
-  // Generic Mega-only base-form filter. This does not depend on a hand-maintained list of
-  // newly added Megas: if a species has a Mega, its base form needs strong non-Mega item
-  // evidence (or an explicit proven-base exception) to be recommended as the base form.
-  const v1811PreviousFormPolicy=v14FormPolicy;
-  v14FormPolicy=function(m){
-    const base=v1811PreviousFormPolicy(m);
-    if(!m||m.mega||!base.hasMega)return base;
-    if(typeof baseFormViable!=='undefined'&&baseFormViable.has(m.name))return base;
-
-    const rows=(envData(m)?.items||[]).slice(0,20);
-    const megas=v14MegaFormsFor(m);
-    let nonMegaMax=0,nonMegaSum=0,megaSum=0,hasPct=false;
-    for(const row of rows){
-      const pct=v14ItemPct(row);if(pct>0)hasPct=true;
-      const isMega=megas.some(mg=>typeof v15StoneMatchesRow==='function'&&v15StoneMatchesRow(row,mg));
-      if(isMega)megaSum+=pct;
-      else {nonMegaMax=Math.max(nonMegaMax,pct);nonMegaSum+=pct;}
-    }
-    const provenNonMega=hasPct&&(nonMegaMax>=35||nonMegaSum>=55);
-    if(provenNonMega)return {...base,hardExclude:false,evidence:Math.max(base.evidence,.9),reason:`通常形態の採用実績あり（最大 ${v15FmtPct(nonMegaMax)}）`};
-    return {...base,hardExclude:true,evidence:Math.min(base.evidence,.12),reason:megaSum>0?`メガ前提の採用傾向（メガ石 ${v15FmtPct(megaSum)}）`:'メガ形態前提で、通常形態の独立した採用根拠が弱い'};
-  };
-  v14RecommendableForm=function(m){return !v14FormPolicy(m).hardExclude;};
-
-  // Re-render immediately so the registration buttons use the reliable handlers now.
-  try{renderBuildRoster();}catch(e){console.error('v18.11 build roster',e);}
-  try{renderSavedRoster();}catch(e){console.error('v18.11 saved roster',e);}
-
-  window.__V1811_SELFTEST__={
-    buildAdd:typeof addBuild==='function',
-    savedAlias:typeof addSavedMon==='function',
-    formPolicy:typeof v14FormPolicy==='function'
-  };
-  document.documentElement.setAttribute('data-v1811-selftest',Object.values(window.__V1811_SELFTEST__).every(Boolean)?'ok':'fail');
-})();
-</script>
-'''
-          if '</body>' not in s:
-              raise SystemExit('body close marker not found')
+          patch=base64.b64decode('PHNjcmlwdD4KLyogPT09PT0gdjE4LjExOiByZWxpYWJsZSBidWlsZGVyICsgcHJhY3RpY2FsIHJlY29tbWVuZGF0aW9uIHBvbGljeSA9PT09PSAqLwooZnVuY3Rpb24oKXsKICBmdW5jdGlvbiB2MTgxMVBlcnNpc3RCdWlsZCgpewogICAgbG9jYWxTdG9yYWdlLnNldEl0ZW0oJ2NoYW1wX2J1aWxkJyxKU09OLnN0cmluZ2lmeShidWlsZFRlYW0pKTsKICAgIGxvY2FsU3RvcmFnZS5zZXRJdGVtKCdjaGFtcF9idWlsZF9pdGVtcycsSlNPTi5zdHJpbmdpZnkoYnVpbGRJdGVtcykpOwogIH0KICBhZGRCdWlsZD1mdW5jdGlvbihuYW1lKXsKICAgIGNvbnN0IG09bW9ucy5maW5kKHg9PngubmFtZT09PW5hbWUpOwogICAgaWYoIW0pcmV0dXJuOwogICAgY29uc3QgZXhhY3Q9YnVpbGRUZWFtLmZpbmRJbmRleCh4PT54Lm5hbWU9PT1uYW1lKTsKICAgIGlmKGV4YWN0Pj0wKXsKICAgICAgY29uc3QgcmVtb3ZlZD1idWlsZFRlYW1bZXhhY3RdOwogICAgICBidWlsZFRlYW0uc3BsaWNlKGV4YWN0LDEpOwogICAgICBpZihyZW1vdmVkPy5uYW1lKWRlbGV0ZSBidWlsZEl0ZW1zW3JlbW92ZWQubmFtZV07CiAgICB9ZWxzZXsKICAgICAgY29uc3Qga2V5PXNwZWNpZXNLZXkobSk7CiAgICAgIGNvbnN0IHNhbWU9YnVpbGRUZWFtLmZpbmQoeD0+c3BlY2llc0tleSh4KT09PWtleSk7CiAgICAgIGlmKHNhbWUpe2FsZXJ0KGAke3NhbWUubmFtZX0g44GoICR7bS5uYW1lfSDjga/lkIzjgZjnqK7ml4/jgarjga7jgaflkIzmmYLjgavjga/nmbvpjLLjgafjgY3jgb7jgZvjgpPjgIJgKTtyZXR1cm47fQogICAgICBpZihidWlsZFRlYW0ubGVuZ3RoPj02KXthbGVydCgnNuWMueOBvuOBp+OBp+OBmScpO3JldHVybjt9CiAgICAgIGJ1aWxkVGVhbS5wdXNoKHsuLi5tfSk7CiAgICAgIGlmKG0ubWVnYSlidWlsZEl0ZW1zW20ubmFtZV09bWVnYVN0b25lRm9yKG0pOwogICAgfQogICAgdjE4MTFQZXJzaXN0QnVpbGQoKTsKICAgIHRyeXtWMTJfUFJPRklMRV9DQUNIRS5jbGVhcigpO31jYXRjaChlKXt9CiAgICByZW5kZXJCdWlsZEN1cnJlbnQoKTsKICAgIHJlbmRlckJ1aWxkUm9zdGVyKCk7CiAgICB0cnl7cmVuZGVyVGVhbUNvbXBsZXRpb24oKTt9Y2F0Y2goZSl7fQogICAgdHJ5e3JlbmRlckhvbWVWMTgoKTt9Y2F0Y2goZSl7fQogIH07CiAgcmVuZGVyQnVpbGRSb3N0ZXI9ZnVuY3Rpb24oKXsKICAgIGlmKCFidWlsZFJvc3RlcilyZXR1cm47CiAgICBjb25zdCBxPW5vcm1hbGl6ZVBva2Vtb25TZWFyY2goKGJ1aWxkU2VhcmNoPy52YWx1ZXx8JycpLnRyaW0oKSk7CiAgICBjb25zdCBmaWx0ZXJlZD1tb25zLmZpbHRlcihtPT4hcXx8bm9ybWFsaXplUG9rZW1vblNlYXJjaChtLm5hbWUpLmluY2x1ZGVzKHEpKTsKICAgIGNvbnN0IGFjdGlvbj1tPT57CiAgICAgIGNvbnN0IHNhZmU9U3RyaW5nKG0ubmFtZSkucmVwbGFjZSgvJi9nLCcmYW1wOycpLnJlcGxhY2UoLyIvZywnJnF1b3Q7Jyk7CiAgICAgIHJldHVybiBgPGRpdiBjbGFzcz0ibW9uQWN0aW9ucyIgc3R5bGU9ImdyaWQtdGVtcGxhdGUtY29sdW1uczoxZnIiPjxidXR0b24gdHlwZT0iYnV0dG9uIiBjbGFzcz0ibWluZUFkZCIgZGF0YS12MTgxMS1idWlsZD0iJHtzYWZlfSI+JHtidWlsZFRlYW0uc29tZSh4PT54Lm5hbWU9PT1tLm5hbWUpPyfop6PpmaQnOifmp4vnr4nvvIsnfTwvYnV0dG9uPjwvZGl2PmA7CiAgICB9OwogICAgYnVpbGRSb3N0ZXIuaW5uZXJIVE1MPXNvcnRCcm93c2VNb25zKGZpbHRlcmVkLGJyb3dzZVNvcnQuYnVpbGQpLm1hcChtPT5icm93c2VDYXJkKG0sYWN0aW9uKG0pKSkuam9pbignJyk7CiAgICBidWlsZFJvc3Rlci5xdWVyeVNlbGVjdG9yQWxsKCdbZGF0YS12MTgxMS1idWlsZF0nKS5mb3JFYWNoKGJ0bj0+ewogICAgICBidG4uYWRkRXZlbnRMaXN0ZW5lcignY2xpY2snLGU9PntlLnByZXZlbnREZWZhdWx0KCk7ZS5zdG9wUHJvcGFnYXRpb24oKTthZGRCdWlsZChidG4uZGF0YXNldC52MTgxMUJ1aWxkKTt9KTsKICAgIH0pOwogIH07CiAgYWRkU2F2ZWRNb249ZnVuY3Rpb24obmFtZSl7cmV0dXJuIGFkZFNhdmVkKG5hbWUpO307CiAgcmVuZGVyU2F2ZWRSb3N0ZXI9ZnVuY3Rpb24oKXsKICAgIGlmKCFzYXZlZFJvc3RlcilyZXR1cm47CiAgICBjb25zdCBxPW5vcm1hbGl6ZVBva2Vtb25TZWFyY2goKHNhdmVkU2VhcmNoPy52YWx1ZXx8JycpLnRyaW0oKSk7CiAgICBjb25zdCBmaWx0ZXJlZD1tb25zLmZpbHRlcihtPT4hcXx8bm9ybWFsaXplUG9rZW1vblNlYXJjaChtLm5hbWUpLmluY2x1ZGVzKHEpKTsKICAgIGNvbnN0IGFjdGlvbj1tPT57CiAgICAgIGNvbnN0IHNhZmU9U3RyaW5nKG0ubmFtZSkucmVwbGFjZSgvJi9nLCcmYW1wOycpLnJlcGxhY2UoLyIvZywnJnF1b3Q7Jyk7CiAgICAgIHJldHVybiBgPGRpdiBjbGFzcz0ibW9uQWN0aW9ucyIgc3R5bGU9ImdyaWQtdGVtcGxhdGUtY29sdW1uczoxZnIiPjxidXR0b24gdHlwZT0iYnV0dG9uIiBjbGFzcz0ibWluZUFkZCIgZGF0YS12MTgxMS1zYXZlZD0iJHtzYWZlfSI+JHtzYXZlZFBhcnR5LnNvbWUoeD0+eC5uYW1lPT09bS5uYW1lKT8n6Kej6ZmkJzon55m76Yyy77yLJ308L2J1dHRvbj48L2Rpdj5gOwogICAgfTsKICAgIHNhdmVkUm9zdGVyLmlubmVySFRNTD1zb3J0QnJvd3NlTW9ucyhmaWx0ZXJlZCxicm93c2VTb3J0LnNhdmVkKS5tYXAobT0+YnJvd3NlQ2FyZChtLGFjdGlvbihtKSkpLmpvaW4oJycpOwogICAgc2F2ZWRSb3N0ZXIucXVlcnlTZWxlY3RvckFsbCgnW2RhdGEtdjE4MTEtc2F2ZWRdJykuZm9yRWFjaChidG49PnsKICAgICAgYnRuLmFkZEV2ZW50TGlzdGVuZXIoJ2NsaWNrJyxlPT57ZS5wcmV2ZW50RGVmYXVsdCgpO2Uuc3RvcFByb3BhZ2F0aW9uKCk7YWRkU2F2ZWQoYnRuLmRhdGFzZXQudjE4MTFTYXZlZCk7fSk7CiAgICB9KTsKICB9OwogIGNvbnN0IHYxODExUHJldmlvdXNGb3JtUG9saWN5PXYxNEZvcm1Qb2xpY3k7CiAgdjE0Rm9ybVBvbGljeT1mdW5jdGlvbihtKXsKICAgIGNvbnN0IGJhc2U9djE4MTFQcmV2aW91c0Zvcm1Qb2xpY3kobSk7CiAgICBpZighbXx8bS5tZWdhfHwhYmFzZS5oYXNNZWdhKXJldHVybiBiYXNlOwogICAgaWYodHlwZW9mIGJhc2VGb3JtVmlhYmxlIT09J3VuZGVmaW5lZCcmJmJhc2VGb3JtVmlhYmxlLmhhcyhtLm5hbWUpKXJldHVybiBiYXNlOwogICAgY29uc3Qgcm93cz0oZW52RGF0YShtKT8uaXRlbXN8fFtdKS5zbGljZSgwLDIwKTsKICAgIGNvbnN0IG1lZ2FzPXYxNE1lZ2FGb3Jtc0ZvcihtKTsKICAgIGxldCBub25NZWdhTWF4PTAsbm9uTWVnYVN1bT0wLG1lZ2FTdW09MCxoYXNQY3Q9ZmFsc2U7CiAgICBmb3IoY29uc3Qgcm93IG9mIHJvd3MpewogICAgICBjb25zdCBwY3Q9djE0SXRlbVBjdChyb3cpO2lmKHBjdD4wKWhhc1BjdD10cnVlOwogICAgICBjb25zdCBpc01lZ2E9bWVnYXMuc29tZShtZz0+dHlwZW9mIHYxNVN0b25lTWF0Y2hlc1Jvdz09PSdmdW5jdGlvbicmJnYxNVN0b25lTWF0Y2hlc1Jvdyhyb3csbWcpKTsKICAgICAgaWYoaXNNZWdhKW1lZ2FTdW0rPXBjdDsKICAgICAgZWxzZSB7bm9uTWVnYU1heD1NYXRoLm1heChub25NZWdhTWF4LHBjdCk7bm9uTWVnYVN1bSs9cGN0O30KICAgIH0KICAgIGNvbnN0IHByb3Zlbk5vbk1lZ2E9aGFzUGN0JiYobm9uTWVnYU1heD49MzV8fG5vbk1lZ2FTdW0+PTU1KTsKICAgIGlmKHByb3Zlbk5vbk1lZ2EpcmV0dXJuIHsuLi5iYXNlLGhhcmRFeGNsdWRlOmZhbHNlLGV2aWRlbmNlOk1hdGgubWF4KGJhc2UuZXZpZGVuY2UsLjkpLHJlYXNvbjpg6YCa5bi45b2i5oWL44Gu5o6h55So5a6f57i+44GC44KK77yI5pyA5aSnICR7djE1Rm10UGN0KG5vbk1lZ2FNYXgpfe+8iWB9OwogICAgcmV0dXJuIHsuLi5iYXNlLGhhcmRFeGNsdWRlOnRydWUsZXZpZGVuY2U6TWF0aC5taW4oYmFzZS5ldmlkZW5jZSwuMTIpLHJlYXNvbjptZWdhU3VtPjA/YOODoeOCrOWJjeaPkOOBruaOoeeUqOWCvuWQke+8iOODoeOCrOefsyAke3YxNUZtdFBjdChtZWdhU3VtKX3vvIlgOifjg6HjgqzlvaLmhYvliY3mj5DjgafjgIHpgJrluLjlvaLmhYvjga7ni6znq4vjgZfjgZ/mjqHnlKjmoLnmi6DjgYzlvLHjgYQnfTsKICB9OwogIHYxNFJlY29tbWVuZGFibGVGb3JtPWZ1bmN0aW9uKG0pe3JldHVybiAhdjE0Rm9ybVBvbGljeShtKS5oYXJkRXhjbHVkZTt9OwogIHRyeXtyZW5kZXJCdWlsZFJvc3RlcigpO31jYXRjaChlKXtjb25zb2xlLmVycm9yKCd2MTguMTEgYnVpbGQgcm9zdGVyJyxlKTt9CiAgdHJ5e3JlbmRlclNhdmVkUm9zdGVyKCk7fWNhdGNoKGUpe2NvbnNvbGUuZXJyb3IoJ3YxOC4xMSBzYXZlZCByb3N0ZXInLGUpO30KICB3aW5kb3cuX19WMTgxMV9TRUxGVEVTVF9fPXtidWlsZEFkZDp0eXBlb2YgYWRkQnVpbGQ9PT0nZnVuY3Rpb24nLHNhdmVkQWxpYXM6dHlwZW9mIGFkZFNhdmVkTW9uPT09J2Z1bmN0aW9uJyxmb3JtUG9saWN5OnR5cGVvZiB2MTRGb3JtUG9saWN5PT09J2Z1bmN0aW9uJ307CiAgZG9jdW1lbnQuZG9jdW1lbnRFbGVtZW50LnNldEF0dHJpYnV0ZSgnZGF0YS12MTgxMS1zZWxmdGVzdCcsT2JqZWN0LnZhbHVlcyh3aW5kb3cuX19WMTgxMV9TRUxGVEVTVF9fKS5ldmVyeShCb29sZWFuKT8nb2snOidmYWlsJyk7Cn0pKCk7Cjwvc2NyaXB0Pg==').decode('utf-8')
+          if '</body>' not in s: raise SystemExit('body close marker not found')
           s=s.replace('</body>',patch+'\n</body>',1)
           p.write_text(s,encoding='utf-8')
           PY

@@ -1,0 +1,50 @@
+name: Apply compact counter picker
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Patch index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          if 'Pokémon Champions Support — v18.7' in s:
+              raise SystemExit(0)
+          s=s.replace('Pokémon Champions Support — v18.6','Pokémon Champions Support — v18.7')
+          s=s.replace('if(out.length>=9)break;','if(out.length>=5)break;')
+          s=s.replace('max-height:270px;overflow:auto','max-height:185px;overflow:auto')
+          old=""" function render(){\n  const list=v186CounterCandidates(input.value);\n  box.innerHTML='';\n  active=-1;"""
+          new=""" function render(){\n  const raw=String(input.value||'').trim();\n  box.innerHTML='';\n  active=-1;\n  if(!raw){box.classList.remove('show');return;}\n  const list=v186CounterCandidates(raw);"""
+          if old not in s:
+              raise SystemExit('render marker not found')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Check JavaScript syntax
+        run: |
+          python - <<'PY'
+          import re, pathlib
+          s=pathlib.Path('index.html').read_text(encoding='utf-8')
+          parts=re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S)
+          pathlib.Path('/tmp/app.js').write_text('\n'.join(parts),encoding='utf-8')
+          PY
+          node --check /tmp/app.js
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Make counter search suggestions less intrusive"
+          git push

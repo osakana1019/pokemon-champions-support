@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pokémon Champions Support — v18.2</title>
+<title>Pokémon Champions Support — v18.3</title>
 <meta name="description" content="Pokémon Championsの環境データを使ったパーティ構築・クイック選出・対策候補・環境分析ツール">
 <meta name="application-name" content="Pokémon Champions Support">
 <meta name="color-scheme" content="dark">
-<meta property="og:title" content="Pokémon Champions Support — v18.2">
+<meta property="og:title" content="Pokémon Champions Support — v18.3">
 <meta property="og:description" content="環境データ連動のパーティ構築・選出・対策支援ツール">
 
 <style>
@@ -805,6 +805,27 @@ input:focus,select:focus,textarea:focus{border-color:#5f86b8!important;box-shado
 html{background:#090d14}
 body{min-width:0}
 </style>
+
+<style id="v18-item-picker">
+.itemSuggestWrap{position:relative;width:100%}
+.itemSuggestWrap .buildItemInput,.itemSuggestWrap .savedItem{width:100%}
+.itemSuggestBox{
+ position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:95;
+ display:none;max-height:218px;overflow:auto;
+ background:#0b111b;border:1px solid #3b4d68;border-radius:10px;
+ box-shadow:0 12px 30px rgba(0,0,0,.42);padding:4px;
+}
+.itemSuggestBox.show{display:block}
+.itemSuggestItem{
+ min-height:32px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+ padding:6px 8px;border-radius:7px;cursor:pointer;font-size:11px;color:#eef4ff;
+}
+.itemSuggestItem:hover,.itemSuggestItem.active{background:#17243a}
+.itemSuggestMeta{font-size:8px;font-weight:900;white-space:nowrap;color:#a9c8ff;
+ border:1px solid #304c70;background:#11223a;border-radius:999px;padding:2px 5px}
+.itemSuggestMeta.metaTop{color:#ffe09b;border-color:#69572e;background:#2a2313}
+.itemSuggestHint{font-size:9px;color:#7f91aa;margin-top:3px;text-align:left}
+</style>
 </head><body data-app-version="v18-useful"><div id="appBootCheck" style="display:none">ok</div><div class="wrap">
 <header><div><h1>Champions Support</h1><div class="sub">構築 → 対策 → 選出を1つにつなぐ実戦サポート</div></div><div style="display:flex;gap:7px;align-items:center"><div class="badge" title="HTML内蔵の現行M-B固定DB">データ 319/319 固定</div><div class="badge">v18 USEFUL</div></div></header>
 <nav class="appnav"><button id="appHomeBtn" class="activeApp" onclick="switchPage('home')">⌂ ホーム</button><button id="appQuickBtn" onclick="switchPage('quick')">⚡ クイック選出</button><button id="appSavedBtn" onclick="switchPage('saved')">💾 パーティ登録</button><button id="appBuildBtn" onclick="switchPage('build')">🧩 パーティ構築</button><button id="appEnvBtn" onclick="switchPage('env')">📊 環境データ</button></nav>
@@ -1025,6 +1046,57 @@ function rejectUnavailableChampionsItem(v){
  if(!x||isChampionsHeldItem(x))return false;
  alert(`「${x}」は現在のPokémon Championsで使用できる持ち物として登録されていません。`);
  return true;
+}
+
+
+// v18.3 compact held-item picker: Pokemon-specific usage first, then broadly popular items.
+const POPULAR_HELD_ITEMS=[
+ 'きあいのタスキ','こだわりスカーフ','いのちのたま','オボンのみ','たべのこし','ラムのみ',
+ 'たつじんのおび','ひかりのねんど','メンタルハーブ','こうかくレンズ','ちからのハチマキ','ものしりメガネ'
+];
+function normalizeHeldItemSearch(v){
+ return String(v||'').toLowerCase().normalize('NFKC').replace(/[・･\sー\-]/g,'');
+}
+function pokemonHeldItemUsageOrder(monName){
+ const rows=yakkun?.[monName]?.items||[];
+ const out=[];
+ for(const row of rows){
+  const raw=Array.isArray(row)?row[0]:(row?.name||'');
+  const ja=(typeof displayEnvTerm==='function'?displayEnvTerm('items',raw):raw)||raw;
+  if(!ja||!isChampionsHeldItem(ja)||/ナイト[XY]?$/.test(ja)||out.includes(ja))continue;
+  out.push(ja);
+ }
+ return out;
+}
+function heldItemSuggestions(monName,query=''){
+ const top=pokemonHeldItemUsageOrder(monName);
+ const ordered=[];
+ for(const x of [...top,...POPULAR_HELD_ITEMS,...CHAMPIONS_HELD_ITEMS]){
+  if(isChampionsHeldItem(x)&&!ordered.includes(x))ordered.push(x);
+ }
+ const q=normalizeHeldItemSearch(query);
+ const filtered=q?ordered.filter(x=>normalizeHeldItemSearch(x).includes(q)):ordered;
+ return filtered.slice(0,8).map(name=>({
+  name,
+  meta:top.includes(name)?'採用上位':POPULAR_HELD_ITEMS.includes(name)?'人気':'',
+  top:top.includes(name)
+ }));
+}
+function showHeldItemSuggestions(input){
+ const wrap=input.closest('.itemSuggestWrap'),box=wrap?.querySelector('.itemSuggestBox');
+ if(!box||input.readOnly)return;
+ const list=heldItemSuggestions(input.dataset.mon||'',input.value);
+ box.innerHTML=list.map(x=>`<div class="itemSuggestItem" onpointerdown="event.preventDefault();chooseHeldItemSuggestion(this.closest('.itemSuggestWrap').querySelector('input'),'${x.name.replace(/'/g,"\\'")}')"><span>${x.name}</span>${x.meta?`<span class="itemSuggestMeta ${x.top?'metaTop':''}">${x.meta}</span>`:''}</div>`).join('');
+ box.classList.toggle('show',list.length>0);
+}
+function hideHeldItemSuggestions(input){
+ setTimeout(()=>input.closest('.itemSuggestWrap')?.querySelector('.itemSuggestBox')?.classList.remove('show'),120);
+}
+function chooseHeldItemSuggestion(input,name){
+ input.value=name;
+ if(input.dataset.itemScope==='saved')updateSavedItem(Number(input.dataset.itemKey),name);
+ else if(input.dataset.itemScope==='build')setItem(input.dataset.itemKey,name);
+ input.closest('.itemSuggestWrap')?.querySelector('.itemSuggestBox')?.classList.remove('show');
 }
 
 for(const k of Object.keys(buildItems)){if(buildItems[k]&&!isChampionsHeldItem(buildItems[k]))delete buildItems[k];}
@@ -2363,15 +2435,18 @@ function renderSavedCompletion(){
 function savedItemInputHtml(m,i){
  const forced=m.mega?megaStoneFor(m):"";
  if(m.mega && savedParty[i]){
-  if(savedParty[i].item!==forced){
-   savedParty[i].item=forced;
-   saveSavedParty();
-  }
-  return `<input class="savedItem" value="${forced.replace(/"/g,"&quot;")}" readonly
-   title="メガシンカには対応メガナイトが必要です">`;
+  if(savedParty[i].item!==forced){savedParty[i].item=forced;saveSavedParty();}
+  return `<input class="savedItem" value="${forced.replace(/"/g,"&quot;")}" readonly title="メガシンカには対応メガナイトが必要です">`;
  }
- return `<input class="savedItem" list="savedItems" value="${(m.item||"").replace(/"/g,"&quot;")}"
-  placeholder="持ち物" onchange="updateSavedItem(${i},this.value)">`;
+ return `<div class="itemSuggestWrap">
+  <input class="savedItem" value="${(m.item||"").replace(/"/g,"&quot;")}" placeholder="持ち物を検索"
+   autocomplete="off" data-item-scope="saved" data-item-key="${i}" data-mon="${m.name.replace(/"/g,'&quot;')}"
+   onfocus="showHeldItemSuggestions(this)"
+   oninput="showHeldItemSuggestions(this)"
+   onblur="hideHeldItemSuggestions(this)"
+   onchange="updateSavedItem(${i},this.value)">
+  <div class="itemSuggestBox"></div>
+ </div>`;
 }
 
 function renderSavedEditors(){
@@ -2409,7 +2484,7 @@ function renderSavedEditors(){
      </div>`;
    }).join('')}
   </div>`
- }).join('')+`<datalist id="savedItems">${commonItems.map(x=>`<option value="${x}">`).join('')}</datalist>`;
+ }).join('');
 }
 function renderSavedRoster(){
  const q=normalizePokemonSearch((savedSearch?.value||"").trim());
@@ -2928,10 +3003,15 @@ function megaStoneFor(m){
 
 function buildItemInputHtml(m,item){
  const safe=String(item||"").replace(/"/g,"&quot;");
- const disabled=m?.mega?" readonly aria-readonly=\"true\"":"";
- return `<input class="buildItemInput" list="items" value="${safe}" placeholder="持ち物"${disabled}
-  onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()"
-  onchange="setItem('${m.name.replace(/'/g,"\\'")}',this.value)">`;
+ if(m?.mega)return `<input class="buildItemInput" value="${safe}" readonly aria-readonly="true">`;
+ return `<div class="itemSuggestWrap">
+  <input class="buildItemInput" value="${safe}" placeholder="持ち物を検索" autocomplete="off"
+   data-item-scope="build" data-item-key="${m.name.replace(/"/g,'&quot;')}" data-mon="${m.name.replace(/"/g,'&quot;')}"
+   onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()"
+   onfocus="showHeldItemSuggestions(this)" oninput="showHeldItemSuggestions(this)" onblur="hideHeldItemSuggestions(this)"
+   onchange="setItem('${m.name.replace(/'/g,"\'")}',this.value)">
+  <div class="itemSuggestBox"></div>
+ </div>`;
 }
 
 function renderBuildCurrent(){
@@ -2958,11 +3038,9 @@ function renderBuildCurrent(){
     <img src="${sprite(m)}" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='${fallback(m)}'}else{this.onerror=null}">
     <div class="name">${m.name}</div>
    </div>
-   <input class="buildItemInput" list="items" value="${item.replace(/"/g,'&quot;')}" placeholder="持ち物"
-    onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()"
-    onchange="setItem('${m.name.replace(/'/g,"\'")}',this.value)">
+   ${buildItemInputHtml(m,item)}
   </div>`;
- }).join('')+`<datalist id="items">${commonItems.map(x=>`<option value="${x}">`).join('')}</datalist>`;
+ }).join('');
 }
 function clearBuild(){buildTeam=[];localStorage.removeItem('champ_build');renderBuildCurrent();renderBuildRoster();renderTeamCompletion();buildSuggestions.innerHTML='';buildSummary.textContent='2匹以上登録してください。'} function setItem(n,v){v=String(v||'').trim();if(rejectUnavailableChampionsItem(v)){buildItems[n]='';localStorage.setItem('champ_build_items',JSON.stringify(buildItems));renderBuildCurrent();return;}buildItems[n]=v;localStorage.setItem('champ_build_items',JSON.stringify(buildItems))}
 const baseFormViable=new Set(['ギャラドス','ガブリアス','メタグロス','ハッサム','バンギラス']);

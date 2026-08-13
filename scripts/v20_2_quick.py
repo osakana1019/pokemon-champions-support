@@ -1,4 +1,7 @@
 from pathlib import Path
+import subprocess,sys
+subprocess.run([sys.executable,'scripts/v20_3_restore_home_classic.py'],check=True)
+subprocess.run([sys.executable,'scripts/v20_3_auto_contrast.py'],check=True)
 p=Path('index.html');s=p.read_text(encoding='utf-8')
 marker='/* ===== v20.2 strict quick set logic ===== */'
 if marker in s: raise SystemExit(0)

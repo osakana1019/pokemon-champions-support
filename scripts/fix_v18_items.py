@@ -1,80 +1,92 @@
 from pathlib import Path
 import re
 
-p=Path('index.html')
-s=p.read_text(encoding='utf-8')
+p = Path('index.html')
+s = p.read_text(encoding='utf-8')
 
+# Current Pokémon Champions held items for Regulation M-B.
+# Cross-checked against current item lists updated through 2026-08-10.
 allowed = [
-    'きあいのタスキ','こだわりスカーフ','オボンのみ','ラムのみ','たべのこし','メンタルハーブ','しろいハーブ',
-    'せんせいのツメ','おうじゃのしるし','ピントレンズ','ひかりのこな','きあいのハチマキ','かいがらのすず',
-    'もくたん','しんぴのしずく','きせきのタネ','じしゃく','とけないこおり','くろおび','どくバリ','やわらかいすな',
-    'するどいくちばし','まがったスプーン','ぎんのこな','かたいいし','のろいのおふだ','りゅうのキバ','くろいメガネ',
-    'メタルコート','ようせいのハネ','シルクのスカーフ','でんきだま',
-    'クラボのみ','カゴのみ','モモンのみ','チーゴのみ','ナナシのみ','ヒメリのみ','オレンのみ','キーのみ',
-    'ホズのみ','オッカのみ','イトケのみ','ソクノのみ','リンドのみ','ヤチェのみ','ヨプのみ','ビアーのみ','シュカのみ',
-    'バコウのみ','ウタンのみ','タンガのみ','ヨロギのみ','カシブのみ','ハバンのみ','ナモのみ','バリブのみ','ロゼルのみ'
+    # Berries
+    'クラボのみ','カゴのみ','モモンのみ','チーゴのみ','ナナシのみ','ヒメリのみ','オレンのみ','キーのみ','ラムのみ','オボンのみ',
+    'オッカのみ','イトケのみ','ソクノのみ','リンドのみ','ヤチェのみ','ヨプのみ','ビアーのみ','シュカのみ','バコウのみ','ウタンのみ',
+    'タンガのみ','ヨロギのみ','カシブのみ','ハバンのみ','ナモのみ','リリバのみ','ホズのみ','ロゼルのみ',
+    # Battle items available in M-B
+    'あついいわ','いのちのたま','おうじゃのしるし','おおきなねっこ','かいがらのすず','かたいいし','きあいのタスキ','きあいのハチマキ',
+    'きせきのタネ','きれいなぬけがら','ぎんのこな','くろいてっきゅう','くろいメガネ','くろおび','こうかくレンズ','こだわりスカーフ',
+    'さらさらいわ','じしゃく','しめったいわ','シルクのスカーフ','しろいハーブ','しんぴのしずく','するどいくちばし','せんせいのツメ',
+    'たつじんのおび','たべのこし','ちからのハチマキ','つめたいいわ','でんきだま','どくバリ','とけないこおり','のろいのおふだ',
+    'ひかりのこな','ひかりのねんど','ピントレンズ','フォーカスレンズ','まがったスプーン','メタルコート','メトロノーム','メンタルハーブ',
+    'もくたん','ものしりメガネ','やわらかいすな','ようせいのハネ','りゅうのキバ'
 ]
-js_list='['+','.join('"'+x+'"' for x in allowed)+']'
-replacement=f'''const CHAMPIONS_HELD_ITEMS={js_list};
-const commonItems=CHAMPIONS_HELD_ITEMS;
-const CHAMPIONS_HELD_ITEM_SET=new Set(CHAMPIONS_HELD_ITEMS);
-function isChampionsHeldItem(v){{
- const x=String(v||'').trim();
- if(!x)return true;
- if(CHAMPIONS_HELD_ITEM_SET.has(x))return true;
- // Mega Stones are legal only for their corresponding Mega form; existing Mega logic locks those automatically.
- if(/ナイト[XY]?$/.test(x))return true;
- return false;
-}}
-function rejectUnavailableChampionsItem(v){{
- const x=String(v||'').trim();
- if(!x||isChampionsHeldItem(x))return false;
- alert(`「${{x}}」は現在のPokémon Championsで使用できる持ち物として登録されていません。`);
- return true;
-}}
-'''
 
-s,n=re.subn(r'const commonItems=\[[^\n]*\];', replacement, s, count=1)
-assert n==1, f'commonItems replacement count={n}'
+js_list = '[' + ','.join('"' + x + '"' for x in allowed) + ']'
+new_whitelist = (
+    f'const CHAMPIONS_ITEM_RULESET="M-B / 2026-08-10";\n'
+    f'const CHAMPIONS_HELD_ITEMS={js_list};\n'
+    'const commonItems=CHAMPIONS_HELD_ITEMS;\n'
+    'const CHAMPIONS_HELD_ITEM_SET=new Set(CHAMPIONS_HELD_ITEMS);'
+)
 
-old="items:(y.items||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),"
-new="items:(y.items||[]).map(x=>({name:x[0],pct:Number(x[1])||0})).filter(x=>isChampionsHeldItem(x.name)),"
-assert old in s, 'rebuildEnvDb item line not found'
-s=s.replace(old,new,1)
+# Replace existing v18.1 whitelist block idempotently.
+pat = r'const CHAMPIONS_ITEM_RULESET="[^"]*";\nconst CHAMPIONS_HELD_ITEMS=\[[^\n]*\];\nconst commonItems=CHAMPIONS_HELD_ITEMS;\nconst CHAMPIONS_HELD_ITEM_SET=new Set\(CHAMPIONS_HELD_ITEMS\);'
+if re.search(pat, s):
+    s = re.sub(pat, new_whitelist, s, count=1)
+else:
+    pat2 = r'const CHAMPIONS_HELD_ITEMS=\[[^\n]*\];\nconst commonItems=CHAMPIONS_HELD_ITEMS;\nconst CHAMPIONS_HELD_ITEM_SET=new Set\(CHAMPIONS_HELD_ITEMS\);'
+    s, n = re.subn(pat2, new_whitelist, s, count=1)
+    assert n == 1, 'held-item whitelist block not found'
 
-old="function clearBuild(){buildTeam=[];localStorage.removeItem('champ_build');renderBuildCurrent();renderBuildRoster();renderTeamCompletion();buildSuggestions.innerHTML='';buildSummary.textContent='2匹以上登録してください。'} function setItem(n,v){buildItems[n]=v;localStorage.setItem('champ_build_items',JSON.stringify(buildItems))}"
-new="function clearBuild(){buildTeam=[];localStorage.removeItem('champ_build');renderBuildCurrent();renderBuildRoster();renderTeamCompletion();buildSuggestions.innerHTML='';buildSummary.textContent='2匹以上登録してください。'} function setItem(n,v){v=String(v||'').trim();if(rejectUnavailableChampionsItem(v)){buildItems[n]='';localStorage.setItem('champ_build_items',JSON.stringify(buildItems));renderBuildCurrent();return;}buildItems[n]=v;localStorage.setItem('champ_build_items',JSON.stringify(buildItems))}"
-assert old in s, 'setItem block not found'
-s=s.replace(old,new,1)
+# Current M-B additions and common API ids -> Japanese labels.
+# Prefixing duplicate object keys is harmless; later identical mappings win.
+aliases = (
+    '  lifeorb:"いのちのたま",expertbelt:"たつじんのおび",lightclay:"ひかりのねんど",'
+    'muscleband:"ちからのハチマキ",wiseglasses:"ものしりメガネ",widelens:"こうかくレンズ",zoomlens:"フォーカスレンズ",'
+    'metronome:"メトロノーム",ironball:"くろいてっきゅう",damprock:"しめったいわ",heatrock:"あついいわ",'
+    'smoothrock:"さらさらいわ",icyrock:"つめたいいわ",shedshell:"きれいなぬけがら",bigroot:"おおきなねっこ",'
+)
+if 'lifeorb:"いのちのたま"' not in s:
+    s, n = re.subn(r'(const COMMON_ENV_JA=\{\n moves:\{.*?\n \},\n items:\{\n)', r'\1' + aliases, s, count=1, flags=re.S)
+    assert n == 1, 'COMMON_ENV_JA items block not found'
+else:
+    # Ensure every M-B alias exists even when some were previously restored.
+    m = re.search(r'(const COMMON_ENV_JA=\{\n moves:\{.*?\n \},\n items:\{\n)(.*?)(\n \},\n abilities:\{)', s, re.S)
+    assert m, 'COMMON_ENV_JA item block not found'
+    body = m.group(2)
+    wanted = {
+        'lifeorb':'いのちのたま','expertbelt':'たつじんのおび','lightclay':'ひかりのねんど','muscleband':'ちからのハチマキ',
+        'wiseglasses':'ものしりメガネ','widelens':'こうかくレンズ','zoomlens':'フォーカスレンズ','metronome':'メトロノーム',
+        'ironball':'くろいてっきゅう','damprock':'しめったいわ','heatrock':'あついいわ','smoothrock':'さらさらいわ',
+        'icyrock':'つめたいいわ','shedshell':'きれいなぬけがら','bigroot':'おおきなねっこ'
+    }
+    missing = ''.join(f'  {k}:"{v}",' for k,v in wanted.items() if f'{k}:"' not in body)
+    if missing:
+        s = s[:m.start(2)] + missing + body + s[m.end(2):]
 
-old="function updateSavedItem(i,v){\n if(!savedParty[i])return;\n const base=mons.find(m=>m.name===savedParty[i].name);\n savedParty[i].item=base?.mega?megaStoneFor(base):v;"
-new="function updateSavedItem(i,v){\n if(!savedParty[i])return;\n const base=mons.find(m=>m.name===savedParty[i].name);\n if(!base?.mega && rejectUnavailableChampionsItem(v)){savedParty[i].item='';saveSavedParty();renderSavedEditors();renderSavedCompletion?.();return;}\n savedParty[i].item=base?.mega?megaStoneFor(base):String(v||'').trim();"
-assert old in s, 'updateSavedItem block not found'
-s=s.replace(old,new,1)
+# When rebuilding local environment DB, normalize API item ids before legality filtering.
+s = s.replace(
+    'items:(y.items||[]).map(x=>({name:x[0],pct:Number(x[1])||0})).filter(x=>isChampionsHeldItem(x.name)),',
+    "items:(y.items||[]).map(x=>({name:x[0],pct:Number(x[1])||0})).filter(x=>isChampionsHeldItem(displayEnvTerm('items',x.name))),",
+    1
+)
 
-# Remove unavailable items from legacy Japanese display aliases so stale fallback data cannot present them as valid choices.
-for bad in [
-    'lifeorb:"いのちのたま",',
-    'choiceband:"こだわりハチマキ",',
-    'choicespecs:"こだわりメガネ",',
-    'expertbelt:"たつじんのおび",',
-    'weaknesspolicy:"じゃくてんほけん",',
-    'lightclay:"ひかりのねんど",'
-]:
-    s=s.replace(bad,'')
+# Restore M-B firepower item evaluation in quick-selection logic.
+needle = "else if(item.includes('きあいのタスキ')){score+=2.2;itemReason='タスキで行動保証'}\n    else if(['たべのこし','オボンのみ'].some(x=>item.includes(x))){score+=1.3;itemReason='回復系持ち物で安定'}"
+replacement = "else if(item.includes('きあいのタスキ')){score+=2.2;itemReason='タスキで行動保証'}\n    else if(['いのちのたま','たつじんのおび','ちからのハチマキ','ものしりメガネ'].some(x=>item.includes(x))){score+=2;itemReason='持ち物で火力を補強'}\n    else if(['たべのこし','オボンのみ'].some(x=>item.includes(x))){score+=1.3;itemReason='回復系持ち物で安定'}"
+if needle in s:
+    s = s.replace(needle, replacement, 1)
 
-# Clean already-saved invalid non-Mega held items when this version first opens.
-marker='const yakkun={'
-cleanup="""for(const k of Object.keys(buildItems)){if(buildItems[k]&&!isChampionsHeldItem(buildItems[k]))delete buildItems[k];}\nlocalStorage.setItem('champ_build_items',JSON.stringify(buildItems));\nsavedParty.forEach(x=>{if(x?.item&&!isChampionsHeldItem(x.item))x.item='';});\nlocalStorage.setItem('champ_saved_party',JSON.stringify(savedParty));\n"""
-assert marker in s, 'yakkun marker not found'
-s=s.replace(marker,cleanup+marker,1)
+# Restore cleaner/endgame bonus for legal M-B offensive items if the old line was removed.
+anchor = 'if(moves.some(v=>["かげうち","しんそく","ふいうち","マッハパンチ","アクアジェット","こおりのつぶて","バレットパンチ"].includes(v.name)))clean+=3;'
+bonus = 'if(["いのちのたま","たつじんのおび","ちからのハチマキ","ものしりメガネ"].some(v=>item.includes(v)))clean+=2;'
+if anchor in s and bonus not in s:
+    s = s.replace(anchor, anchor + '\n ' + bonus, 1)
 
-# Remove stale unavailable-item scoring bonuses. Choice Scarf remains valid and keeps its speed-control bonus.
-s=s.replace("if([\"いのちのたま\",\"こだわりハチマキ\",\"こだわりメガネ\"].some(v=>item.includes(v)))clean+=2;", "")
-s=s.replace("else if(['いのちのたま','たつじんのおび','こだわりハチマキ','こだわりメガネ'].some(x=>item.includes(x))){score+=2;itemReason='持ち物で火力を補強'}", "")
+# Fix the old typo if it survives elsewhere.
+s = s.replace('バリブのみ', 'リリバのみ')
 
-# Bump visible version label.
-s=s.replace('Pokémon Champions Support — v18','Pokémon Champions Support — v18.1',2)
+# Visible version bump.
+s = s.replace('Pokémon Champions Support — v18.1', 'Pokémon Champions Support — v18.2', 2)
 
-p.write_text(s,encoding='utf-8')
-print('patched Champions held items:', len(allowed))
+p.write_text(s, encoding='utf-8')
+print('patched current M-B held items:', len(allowed), 'ruleset=M-B / 2026-08-10')

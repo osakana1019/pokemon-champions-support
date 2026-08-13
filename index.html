@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pokémon Champions Support — v18.1</title>
+<title>Pokémon Champions Support — v18.2</title>
 <meta name="description" content="Pokémon Championsの環境データを使ったパーティ構築・クイック選出・対策候補・環境分析ツール">
 <meta name="application-name" content="Pokémon Champions Support">
 <meta name="color-scheme" content="dark">
-<meta property="og:title" content="Pokémon Champions Support — v18.1">
+<meta property="og:title" content="Pokémon Champions Support — v18.2">
 <meta property="og:description" content="環境データ連動のパーティ構築・選出・対策支援ツール">
 
 <style>
@@ -1008,7 +1008,8 @@ const SHOWDOWN_SPRITE_OVERRIDES={
 };
 const fallback=m=>SHOWDOWN_SPRITE_OVERRIDES[m.name]||`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m.dex}.png`;
 let mine=JSON.parse(localStorage.getItem('champ_mine')||'[]'),opp=[],buildTeam=JSON.parse(localStorage.getItem('champ_build')||'[]'),buildItems=JSON.parse(localStorage.getItem('champ_build_items')||'{}'),savedParty=JSON.parse(localStorage.getItem('champ_saved_party')||'[]');
-const CHAMPIONS_HELD_ITEMS=["きあいのタスキ","こだわりスカーフ","オボンのみ","ラムのみ","たべのこし","メンタルハーブ","しろいハーブ","せんせいのツメ","おうじゃのしるし","ピントレンズ","ひかりのこな","きあいのハチマキ","かいがらのすず","もくたん","しんぴのしずく","きせきのタネ","じしゃく","とけないこおり","くろおび","どくバリ","やわらかいすな","するどいくちばし","まがったスプーン","ぎんのこな","かたいいし","のろいのおふだ","りゅうのキバ","くろいメガネ","メタルコート","ようせいのハネ","シルクのスカーフ","でんきだま","クラボのみ","カゴのみ","モモンのみ","チーゴのみ","ナナシのみ","ヒメリのみ","オレンのみ","キーのみ","ホズのみ","オッカのみ","イトケのみ","ソクノのみ","リンドのみ","ヤチェのみ","ヨプのみ","ビアーのみ","シュカのみ","バコウのみ","ウタンのみ","タンガのみ","ヨロギのみ","カシブのみ","ハバンのみ","ナモのみ","バリブのみ","ロゼルのみ"];
+const CHAMPIONS_ITEM_RULESET="M-B / 2026-08-10";
+const CHAMPIONS_HELD_ITEMS=["クラボのみ","カゴのみ","モモンのみ","チーゴのみ","ナナシのみ","ヒメリのみ","オレンのみ","キーのみ","ラムのみ","オボンのみ","オッカのみ","イトケのみ","ソクノのみ","リンドのみ","ヤチェのみ","ヨプのみ","ビアーのみ","シュカのみ","バコウのみ","ウタンのみ","タンガのみ","ヨロギのみ","カシブのみ","ハバンのみ","ナモのみ","リリバのみ","ホズのみ","ロゼルのみ","あついいわ","いのちのたま","おうじゃのしるし","おおきなねっこ","かいがらのすず","かたいいし","きあいのタスキ","きあいのハチマキ","きせきのタネ","きれいなぬけがら","ぎんのこな","くろいてっきゅう","くろいメガネ","くろおび","こうかくレンズ","こだわりスカーフ","さらさらいわ","じしゃく","しめったいわ","シルクのスカーフ","しろいハーブ","しんぴのしずく","するどいくちばし","せんせいのツメ","たつじんのおび","たべのこし","ちからのハチマキ","つめたいいわ","でんきだま","どくバリ","とけないこおり","のろいのおふだ","ひかりのこな","ひかりのねんど","ピントレンズ","フォーカスレンズ","まがったスプーン","メタルコート","メトロノーム","メンタルハーブ","もくたん","ものしりメガネ","やわらかいすな","ようせいのハネ","りゅうのキバ"];
 const commonItems=CHAMPIONS_HELD_ITEMS;
 const CHAMPIONS_HELD_ITEM_SET=new Set(CHAMPIONS_HELD_ITEMS);
 function isChampionsHeldItem(v){
@@ -1606,7 +1607,7 @@ const COMMON_ENV_JA={
   earthquake:"じしん",protect:"まもる",dragonclaw:"ドラゴンクロー",rockslide:"いわなだれ",stompingtantrum:"じだんだ",poisonjab:"どくづき",dragontail:"ドラゴンテール",ironhead:"アイアンヘッド",scaleshot:"スケイルショット",swordsdance:"つるぎのまい",playrough:"じゃれつく",shadowclaw:"シャドークロー",shadowsneak:"かげうち",uturn:"とんぼがえり",knockoff:"はたきおとす",flowertrick:"トリックフラワー",hydropump:"ハイドロポンプ",moonblast:"ムーンフォース",icebeam:"れいとうビーム",dracometeor:"りゅうせいぐん",closecombat:"インファイト",stealthrock:"ステルスロック",roost:"はねやすめ",bodypress:"ボディプレス",irondefense:"てっぺき",willowisp:"おにび",recover:"じこさいせい",substitute:"みがわり",taunt:"ちょうはつ"
  },
  items:{
-  choicescarf:"こだわりスカーフ",sitrusberry:"オボンのみ",focussash:"きあいのタスキ",leftovers:"たべのこし",lumberry:"ラムのみ",mentalherb:"メンタルハーブ",softsand:"やわらかいすな",yacheberry:"ヤチェのみ",roseliberry:"ロゼルのみ",quickclaw:"せんせいのツメ",nevermeltice:"とけないこおり"
+  lifeorb:"いのちのたま",expertbelt:"たつじんのおび",lightclay:"ひかりのねんど",muscleband:"ちからのハチマキ",wiseglasses:"ものしりメガネ",widelens:"こうかくレンズ",zoomlens:"フォーカスレンズ",metronome:"メトロノーム",ironball:"くろいてっきゅう",damprock:"しめったいわ",heatrock:"あついいわ",smoothrock:"さらさらいわ",icyrock:"つめたいいわ",shedshell:"きれいなぬけがら",bigroot:"おおきなねっこ",  choicescarf:"こだわりスカーフ",sitrusberry:"オボンのみ",focussash:"きあいのタスキ",leftovers:"たべのこし",lumberry:"ラムのみ",mentalherb:"メンタルハーブ",softsand:"やわらかいすな",yacheberry:"ヤチェのみ",roseliberry:"ロゼルのみ",quickclaw:"せんせいのツメ",nevermeltice:"とけないこおり"
  },
  abilities:{
   roughskin:"さめはだ",sandveil:"すながくれ",intimidate:"いかく",innerfocus:"せいしんりょく",levitate:"ふゆう",overgrow:"しんりょく",blaze:"もうか",torrent:"げきりゅう",swarm:"むしのしらせ",adaptability:"てきおうりょく",unaware:"てんねん",regenerator:"さいせいりょく",prankster:"いたずらごころ",multiscale:"マルチスケイル",technician:"テクニシャン",magicguard:"マジックガード",pressure:"プレッシャー"
@@ -1754,7 +1755,7 @@ function rebuildEnvDb(){
    rank:(m.usageRank&&m.usageRank<=150)?m.usageRank:null,
    rankSource:"GameWith M-5 8/10",
    moves:(y.moves||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),
-   items:(y.items||[]).map(x=>({name:x[0],pct:Number(x[1])||0})).filter(x=>isChampionsHeldItem(x.name)),
+   items:(y.items||[]).map(x=>({name:x[0],pct:Number(x[1])||0})).filter(x=>isChampionsHeldItem(displayEnvTerm('items',x.name))),
    abilities:(y.abilities||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),
    natures:(y.natures||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),
    spreads:(y.spreads||[]).map(x=>({name:x[0],pct:Number(x[1])||0})),
@@ -2650,6 +2651,7 @@ function quickOrderScore(x){
  if(m.role==="積みエース")clean+=5;
  if(m.role==="高速アタッカー")clean+=3;
  if(moves.some(v=>["かげうち","しんそく","ふいうち","マッハパンチ","アクアジェット","こおりのつぶて","バレットパンチ"].includes(v.name)))clean+=3;
+ if(["いのちのたま","たつじんのおび","ちからのハチマキ","ものしりメガネ"].some(v=>item.includes(v)))clean+=2;
  
 
  lead+=x.pct*.04;mid+=x.pct*.04;clean+=x.pct*.04;

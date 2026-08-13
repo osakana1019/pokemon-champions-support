@@ -1,0 +1,41 @@
+name: Build move editor v18.12
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/fix_v18_12_build_moves.py'
+      - '.github/workflows/build-moves-v18-12.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Patch index
+        run: python scripts/fix_v18_12_build_moves.py
+      - name: Check JavaScript syntax
+        run: |
+          python - <<'PY'
+          import re, pathlib
+          s=pathlib.Path('index.html').read_text(encoding='utf-8')
+          parts=re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S)
+          pathlib.Path('/tmp/app.js').write_text('\n'.join(parts),encoding='utf-8')
+          assert 'Pokémon Champions Support — v18.12' in s
+          assert 'v18.12: build move editor' in s
+          assert 'buildMoveEditor' in s
+          assert 'moveUsagePctV1812' in s
+          PY
+          node --check /tmp/app.js
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Restore build move inputs and sort suggestions by usage"
+          git push

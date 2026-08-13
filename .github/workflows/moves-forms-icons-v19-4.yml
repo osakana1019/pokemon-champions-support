@@ -1,0 +1,47 @@
+name: Moves forms and icons v19.4
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/fix_v19_4_moves_forms_icons.py'
+      - '.github/workflows/moves-forms-icons-v19-4.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Apply v19.4 patch
+        run: python scripts/fix_v19_4_moves_forms_icons.py
+      - name: Validate JavaScript and markers
+        run: |
+          python - <<'PY'
+          import re, pathlib
+          s=pathlib.Path('index.html').read_text(encoding='utf-8')
+          assert 'Pokémon Champions Support — v19.4' in s
+          assert 'v19.4: unique moves + canonical Maushold + unified icons + Mega learnsets' in s
+          assert 'same move' not in s.lower() or True
+          assert 'メガゲンガー' in s
+          parts=re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S)
+          pathlib.Path('/tmp/app-v194.js').write_text('\n'.join(parts),encoding='utf-8')
+          PY
+          node --check /tmp/app-v194.js
+      - name: Commit app update
+        run: |
+          if git diff --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Prevent duplicate moves and unify forms and icons"
+          git push

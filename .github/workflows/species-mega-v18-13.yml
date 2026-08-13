@@ -1,0 +1,41 @@
+name: Species and Mega recommendations v18.13
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/fix_v18_13_species_mega.py'
+      - '.github/workflows/species-mega-v18-13.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Patch index
+        run: python scripts/fix_v18_13_species_mega.py
+      - name: Check JavaScript syntax
+        run: |
+          python - <<'PY'
+          import re, pathlib
+          s=pathlib.Path('index.html').read_text(encoding='utf-8')
+          parts=re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S)
+          pathlib.Path('/tmp/app.js').write_text('\n'.join(parts),encoding='utf-8')
+          assert 'Pokémon Champions Support — v18.13' in s
+          assert 'v18.13: canonical species' in s
+          assert "return 'species:ロトム'" in s
+          assert 'zone=wanted>=2?8:6' in s
+          PY
+          node --check /tmp/app.js
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix form duplicates and guarantee visible Mega suggestions"
+          git push

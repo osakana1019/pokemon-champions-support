@@ -1,0 +1,48 @@
+name: Saved moves white pixel UI v20.1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/v20_1_saved_moves_white_pixel.py'
+      - '.github/workflows/v20-1-saved-white-pixel.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Apply v20.1 patch
+        run: python scripts/v20_1_saved_moves_white_pixel.py
+      - name: Validate JavaScript and markers
+        run: |
+          python - <<'PY'
+          import re, pathlib
+          s=pathlib.Path('index.html').read_text(encoding='utf-8')
+          assert 'Pokémon Champions Support — v20.1' in s
+          assert 'v20.1: durable saved moves + white UI + unified pixel sprites' in s
+          assert 'champ_saved_move_shadow_v201' in s
+          assert 'v201PixelSprite' in s
+          assert 'color-scheme" content="light' in s
+          parts=re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S)
+          pathlib.Path('/tmp/app-v201.js').write_text('\n'.join(parts),encoding='utf-8')
+          PY
+          node --check /tmp/app-v201.js
+      - name: Commit app update
+        run: |
+          if git diff --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Make saved moves durable and unify light pixel UI"
+          git push

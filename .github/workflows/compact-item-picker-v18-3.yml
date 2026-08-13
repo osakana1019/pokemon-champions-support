@@ -1,0 +1,34 @@
+name: Apply compact held-item picker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/compact_item_picker_v18_3.py'
+      - '.github/workflows/compact-item-picker-v18-3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply compact item picker
+        run: python scripts/compact_item_picker_v18_3.py
+
+      - name: Commit patched app
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Improve held-item picker UX'
+            git push
+          fi

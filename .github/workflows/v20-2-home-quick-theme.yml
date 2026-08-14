@@ -1,4 +1,4 @@
-name: v20.9 rebuilt nav and transparent zukan art
+name: v20.9 rebuilt nav and zukan cleanup
 
 on:
   push:
@@ -35,8 +35,8 @@ jobs:
           s=pathlib.Path('index.html').read_text(encoding='utf-8')
           assert 'Pokémon Champions Support — v20.9' in s
           assert 'v20.9 solid nav + transparent art' in s
-          assert 'v20.9 zukan transparent artwork + rebuilt nav' in s
-          assert 'id="v209Nav"' in s or 'v209Nav' in s
+          assert 'v20.9 rebuilt nav final' in s
+          assert 'v209Nav' in s
           assert 'V208_ZUKAN_ART' in s
           assert 'zukan.pokemon.co.jp' in s
           assert '.v209Lbl' in s
@@ -50,5 +50,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git commit -m 'Rebuild navigation and use transparent Zukan images'
+          git commit -m 'Rebuild navigation and remove image tiles'
           git push

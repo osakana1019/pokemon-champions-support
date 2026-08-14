@@ -1,24 +1,31 @@
 from pathlib import Path
 p=Path('index.html');s=p.read_text(encoding='utf-8')
-marker='/* ===== v20.8 labeled rail ===== */'
+marker='/* ===== v20.9 solid nav + transparent art ===== */'
 if marker in s: raise SystemExit(0)
-s=s.replace('Pokémon Champions Support — v20.7','Pokémon Champions Support — v20.8')
-s=s.replace('<div class="badge">v20.7</div>','<div class="badge">v20.8</div>',1)
-css=r'''<style id="v208-labeled-rail">
-/* ===== v20.8 labeled rail ===== */
+s=s.replace('Pokémon Champions Support — v20.8','Pokémon Champions Support — v20.9')
+s=s.replace('<div class="badge">v20.8</div>','<div class="badge">v20.9</div>',1)
+css=r'''<style id="v209-solid-nav">
+/* ===== v20.9 solid nav + transparent art ===== */
+#v205Rail{display:none!important}
 @media(min-width:1080px){
- body.v205RailOn .wrap{padding-left:112px!important}
- #v205Rail{width:78px!important;padding:9px 7px!important;align-items:center!important;overflow:visible!important}
- .v205Logo{width:48px!important;height:40px!important;margin-bottom:6px!important;font-size:11px!important;border-radius:12px!important}
- #v205Rail .v205RailBtn{width:62px!important;height:56px!important;min-height:56px!important;max-width:62px!important;padding:5px 3px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;overflow:visible!important;font-size:inherit!important;line-height:1!important;border-radius:13px!important}
- #v205Rail .v205RailBtn svg,#v205Rail .v207Glyph{display:none!important}
- .v208RailIcon{display:block!important;height:22px;line-height:22px;font-size:20px!important;font-family:system-ui,-apple-system,"Segoe UI Symbol","Noto Sans Symbols 2",sans-serif!important;font-weight:700!important;color:currentColor!important;pointer-events:none!important}
- .v208RailLabel{display:block!important;max-width:56px;font-size:8.5px!important;line-height:1.05!important;letter-spacing:0!important;font-weight:850!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;color:currentColor!important;pointer-events:none!important}
- .v205Tip{display:none!important}
- .v205Count{right:-1px!important;top:-1px!important;z-index:3!important}
- #v205Rail .v205RailBtn.active .v208RailIcon,#v205Rail .v205RailBtn.active .v208RailLabel{color:var(--xaccenttext)!important}
- #v205Rail .v205RailBtn:not(.active) .v208RailLabel{color:var(--xmuted)!important}
- #v205Rail .v205RailBtn:hover .v208RailLabel{color:var(--xtext)!important}
+ body.v209NavOn .wrap{width:auto!important;max-width:none!important;margin:0!important;padding:14px 24px 34px 126px!important}
+ body.v209NavOn>.wrap>.appnav{display:none!important}
+ #v209Nav{position:fixed;left:12px;top:12px;bottom:12px;z-index:800;width:98px;padding:10px 8px;display:flex;flex-direction:column;gap:7px;border:1px solid var(--xline);border-radius:20px;background:color-mix(in srgb,var(--xcard) 96%,transparent);box-shadow:0 14px 38px #0003;backdrop-filter:blur(14px);overflow:hidden;color:var(--xtext)}
+ .v209Brand{height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--xaccent);color:var(--xaccenttext);font-weight:950;font-size:12px;letter-spacing:.08em;margin-bottom:3px;flex:none}
+ .v209Sep{height:1px;background:var(--xline);margin:0 6px 3px;flex:none}
+ #v209Nav button{position:relative!important;width:100%!important;min-height:58px!important;padding:6px 4px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;border-radius:13px!important;background:transparent!important;color:var(--xmuted)!important;box-shadow:none!important;border:0!important;overflow:hidden!important;line-height:1!important}
+ #v209Nav button:hover{background:var(--xsoft)!important;color:var(--xtext)!important}
+ #v209Nav button.active{background:var(--xaccent)!important;color:var(--xaccenttext)!important}
+ .v209Ico{width:23px;height:23px;display:grid;place-items:center;font-size:19px!important;line-height:23px!important;font-weight:900!important;color:currentColor!important;flex:none;overflow:visible!important}
+ .v209Lbl{display:block!important;width:100%;font-size:9px!important;line-height:1.1!important;font-weight:900!important;letter-spacing:0!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;color:currentColor!important}
+ .v209Count{position:absolute;right:4px;top:4px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;display:grid;place-items:center;font-size:8px!important;font-weight:950!important;line-height:16px!important;background:var(--xtext);color:var(--xbg);border:2px solid var(--xcard)}
+ .v209Bottom{margin-top:auto;display:grid;gap:7px;flex:none}
+}
+@media(max-width:1079px){#v209Nav{display:none!important}}
+/* Zukan artwork must sit directly on the UI, never inside a white image tile. */
+.mon img,.sel img,.rankRow img,.oppQuickMon img,.profile img,.pick img,.metaRec img,.savedHead img,.homePartyMon img,.homeMetaMon img,.variantChoice img,.v206SourceMon img,.buildSlot img{
+ background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;filter:none!important;image-rendering:auto!important
 }
 </style>'''
-s=s.replace('</body>',css+'\n</body>',1);p.write_text(s,encoding='utf-8')
+s=s.replace('</body>',css+'\n</body>',1)
+p.write_text(s,encoding='utf-8')

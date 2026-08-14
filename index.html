@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pokémon Champions Support — v20.5</title>
+<title>Pokémon Champions Support — v20.6</title>
 <meta name="description" content="Pokémon Championsの環境データを使ったパーティ構築・クイック選出・対策候補・環境分析ツール">
 <meta name="application-name" content="Pokémon Champions Support">
 <meta name="color-scheme" content="light">
-<meta property="og:title" content="Pokémon Champions Support — v20.5">
+<meta property="og:title" content="Pokémon Champions Support — v20.6">
 <meta property="og:description" content="環境データ連動のパーティ構築・選出・対策支援ツール">
 
 <style>
@@ -827,7 +827,7 @@ body{min-width:0}
 .itemSuggestHint{font-size:9px;color:#7f91aa;margin-top:3px;text-align:left}
 </style>
 </head><body data-app-version="v18-useful"><div id="appBootCheck" style="display:none">ok</div><div class="wrap">
-<header><div><h1>Champions Support</h1><div class="sub">構築 → 対策 → 選出を1つにつなぐ実戦サポート</div></div><div style="display:flex;gap:7px;align-items:center"><div class="badge" title="HTML内蔵の現行M-B固定DB">データ 319/319 固定</div><div class="badge">v20.5</div></div></header>
+<header><div><h1>Champions Support</h1><div class="sub">構築 → 対策 → 選出を1つにつなぐ実戦サポート</div></div><div style="display:flex;gap:7px;align-items:center"><div class="badge" title="HTML内蔵の現行M-B固定DB">データ 319/319 固定</div><div class="badge">v20.6</div></div></header>
 <nav class="appnav"><button id="appHomeBtn" class="activeApp" onclick="switchPage('home')">⌂ ホーム</button><button id="appQuickBtn" onclick="switchPage('quick')">⚡ クイック選出</button><button id="appSavedBtn" onclick="switchPage('saved')">💾 パーティ登録</button><button id="appBuildBtn" onclick="switchPage('build')">🧩 パーティ構築</button><button id="appEnvBtn" onclick="switchPage('env')">📊 環境データ</button></nav>
 
 <div id="homePage" class="page activePage">
@@ -7124,6 +7124,59 @@ window.v205AnalyzeParty=function(){sync(true);v205OpenParty('analysis');setTimeo
 migrate();partyPage();sync(true);rail();const oldSwitch=window.switchPage;if(typeof oldSwitch==='function'){window.switchPage=function(name){if(name==='saved')return v205OpenParty('edit');if(name==='build'||name==='party')return v205OpenParty(name==='build'?'analysis':undefined);const r=oldSwitch.apply(this,arguments);setTimeout(railActive,0);return r}}
 if(typeof window.addBuild==='function'){const oldAdd=window.addBuild;window.addBuild=function(name){if(document.getElementById('partyPage')){addSaved(name);sync(true);v205OpenParty('edit');return}return oldAdd.apply(this,arguments)}}
 if(typeof window.analyzeBuild==='function'){const oldAnalyze=window.analyzeBuild;window.analyzeBuild=function(){sync(true);return oldAnalyze.apply(this,arguments)}}if(typeof window.analyzeCounterPokemon==='function'){const oldCounter=window.analyzeCounterPokemon;window.analyzeCounterPokemon=function(){sync(true);return oldCounter.apply(this,arguments)}}setInterval(()=>{if(signature()!==sig)sync(true);railActive()},700);new MutationObserver(railActive).observe(document.documentElement,{attributes:true,attributeFilter:['data-app-theme']});window.__V205_TEST__={party:!!document.getElementById('partyPage'),rail:!!document.getElementById('v205Rail')};
+})();
+</script>
+<style id="v206-polish">
+/* ===== v20.6 rail polish + fit meters ===== */
+@media(min-width:1080px){
+ body.v205RailOn .wrap{padding-left:96px!important}
+ #v205Rail{width:60px!important;padding:8px 6px!important;border-radius:18px!important;overflow:visible!important}
+ .v205Logo{width:40px!important;height:40px!important;border-radius:12px!important;font-size:12px!important;margin-bottom:8px!important}
+ .v205RailBtn{width:44px!important;height:44px!important;min-height:44px!important;max-width:44px!important;overflow:visible!important;font-size:0!important;line-height:0!important;flex:none!important}
+ .v205RailBtn svg{width:20px!important;height:20px!important;display:block!important;overflow:visible!important}
+ .v205RailBtn>*:not(svg):not(.v205Tip):not(.v205Count){display:none!important}
+ .v205Tip{left:52px!important;z-index:900!important;max-width:180px!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;line-height:1.2!important;letter-spacing:0!important;border:1px solid var(--xline)!important;background:var(--xcard)!important;color:var(--xtext)!important;box-shadow:0 8px 24px #0004!important}
+ .v205Count{right:-3px!important;top:-3px!important;min-width:17px!important;width:auto!important;height:17px!important;max-width:28px!important;padding:0 4px!important;font-size:8px!important;line-height:17px!important;overflow:hidden!important;white-space:nowrap!important;border:2px solid var(--xcard)!important;background:var(--xaccent)!important;color:var(--xaccenttext)!important}
+}
+/* Candidate fit meter: theme-safe, 1:1 with displayed percentage. */
+#buildSuggestions .v12BuildPick .compatPct{display:flex!important;align-items:baseline!important;gap:5px!important;margin-top:8px!important;font-size:20px!important;color:var(--xtext)!important}
+#buildSuggestions .v12BuildPick .compatPct:after{content:'適合度';font-size:9px;font-weight:800;color:var(--xmuted)!important;order:-1}
+#buildSuggestions .v12BuildPick .compatBar{position:relative!important;height:8px!important;margin:5px 0 10px!important;border-radius:999px!important;overflow:hidden!important;background:var(--xsoft)!important;border:1px solid var(--xline)!important;box-shadow:none!important}
+#buildSuggestions .v12BuildPick .compatBar>div{height:100%!important;max-width:100%!important;min-width:0!important;border-radius:999px!important;background:var(--xaccent)!important;box-shadow:none!important;transition:width .18s ease!important}
+#buildSuggestions .v12BuildPick .compatBar:after{content:'';position:absolute;left:50%;top:-1px;bottom:-1px;width:1px;background:var(--xline);opacity:.7}
+#v206PartySource{margin:0 0 12px;padding:11px 12px;border:1px solid var(--xline);border-radius:14px;background:var(--xcard2);color:var(--xtext)}
+.v206SourceHead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:8px}.v206SourceHead b{font-size:12px}.v206SourceHead span{font-size:9px;color:var(--xmuted)}
+.v206SourceMons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}.v206SourceMon{min-width:0;padding:6px 4px;border:1px solid var(--xline);border-radius:10px;background:var(--xcard);text-align:center}.v206SourceMon img{display:block;width:38px;height:38px;object-fit:contain;margin:0 auto 2px}.v206SourceMon span{display:block;font-size:8px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--xtext)}
+.v206SourceEmpty{display:grid;place-items:center;min-height:50px;border:1px dashed var(--xline);border-radius:10px;color:var(--xmuted);font-size:9px}
+.v206MeterNote{font-size:9px!important;color:var(--xmuted)!important;margin:-3px 0 9px!important}
+@media(max-width:720px){.v206SourceMons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+<script>
+/* ===== v20.6 source clarity + meter normalization ===== */
+(function(){
+'use strict';
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function sourceTeam(){try{return (savedParty||[]).slice(0,6)}catch(e){return []}}
+function sourceSig(){return sourceTeam().map(m=>`${m?.name||''}|${m?.item||''}|${(m?.moves||[]).map(x=>x?.name||'').join(',')}`).join('||')}
+let last='';
+function renderSource(force=false){
+ const result=document.getElementById('buildResult'),summary=document.getElementById('buildSummary');if(!result||!summary)return;
+ const sig=sourceSig();if(!force&&sig===last&&document.getElementById('v206PartySource'))return;last=sig;
+ let box=document.getElementById('v206PartySource');if(!box){box=document.createElement('div');box.id='v206PartySource';summary.parentNode.insertBefore(box,summary)}
+ const team=sourceTeam();
+ const cells=Array.from({length:6},(_,i)=>{const m=team[i];if(!m)return '<div class="v206SourceEmpty">空き</div>';let src='';try{src=sprite(m)}catch(e){};let fb='';try{fb=fallback(m)}catch(e){};return `<div class="v206SourceMon" title="${esc(m.name)}"><img src="${esc(src)}" ${fb?`onerror="this.onerror=null;this.src='${String(fb).replace(/'/g,"\\'")}'"`:''}><span>${esc(m.name)}</span></div>`}).join('');
+ box.innerHTML=`<div class="v206SourceHead"><b>このパーティを基準に総合候補を計算</b><span>${team.length}/6体 ・ 技/持ち物も反映</span></div><div class="v206SourceMons">${cells}</div>`;
+ let legend=document.getElementById('v206MeterLegend');if(!legend){legend=document.createElement('div');legend.id='v206MeterLegend';legend.className='v206MeterNote';const suggestions=document.getElementById('buildSuggestions');suggestions?.parentNode.insertBefore(legend,suggestions)}if(legend)legend.textContent='総合適合度は0〜100。表示％とバーの長さを同じ値に統一しています。';
+}
+function meterPct(card){const t=card.querySelector('.compatPct')?.textContent||'';const m=t.match(/(-?\d+(?:\.\d+)?)\s*%/);return m?Math.max(0,Math.min(100,Number(m[1]))):null}
+function normalizeMeters(){
+ document.querySelectorAll('#buildSuggestions .v12BuildPick').forEach(card=>{const p=meterPct(card),bar=card.querySelector('.compatBar>div');if(p===null||!bar)return;bar.style.setProperty('width',p+'%','important');bar.dataset.fit=String(p);const pct=card.querySelector('.compatPct');if(pct){const raw=pct.textContent.match(/(-?\d+(?:\.\d+)?)\s*%/);if(raw)pct.textContent=raw[1]+'%'}});
+ renderSource();
+}
+function install(){renderSource(true);normalizeMeters();const target=document.getElementById('buildSuggestions');if(target&&!target.dataset.v206watch){target.dataset.v206watch='1';new MutationObserver(()=>{renderSource();normalizeMeters()}).observe(target,{childList:true,subtree:true,characterData:true})}}
+const oldAnalyze=window.v205AnalyzeParty;if(typeof oldAnalyze==='function'){window.v205AnalyzeParty=function(){renderSource(true);const r=oldAnalyze.apply(this,arguments);setTimeout(()=>{renderSource(true);normalizeMeters()},50);return r}}
+const oldOpen=window.v205OpenParty;if(typeof oldOpen==='function'){window.v205OpenParty=function(){const r=oldOpen.apply(this,arguments);setTimeout(()=>{renderSource(true);normalizeMeters()},0);return r}}
+install();setInterval(()=>{if(sourceSig()!==last)renderSource(true);normalizeMeters()},1200);window.__V206_TEST__={source:!!document.getElementById('v206PartySource'),meters:typeof normalizeMeters==='function'};
 })();
 </script>
 </body></html>

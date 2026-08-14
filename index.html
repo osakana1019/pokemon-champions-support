@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pokémon Champions Support — v20.6</title>
+<title>Pokémon Champions Support — v20.7</title>
 <meta name="description" content="Pokémon Championsの環境データを使ったパーティ構築・クイック選出・対策候補・環境分析ツール">
 <meta name="application-name" content="Pokémon Champions Support">
 <meta name="color-scheme" content="light">
-<meta property="og:title" content="Pokémon Champions Support — v20.6">
+<meta property="og:title" content="Pokémon Champions Support — v20.7">
 <meta property="og:description" content="環境データ連動のパーティ構築・選出・対策支援ツール">
 
 <style>
@@ -827,7 +827,7 @@ body{min-width:0}
 .itemSuggestHint{font-size:9px;color:#7f91aa;margin-top:3px;text-align:left}
 </style>
 </head><body data-app-version="v18-useful"><div id="appBootCheck" style="display:none">ok</div><div class="wrap">
-<header><div><h1>Champions Support</h1><div class="sub">構築 → 対策 → 選出を1つにつなぐ実戦サポート</div></div><div style="display:flex;gap:7px;align-items:center"><div class="badge" title="HTML内蔵の現行M-B固定DB">データ 319/319 固定</div><div class="badge">v20.6</div></div></header>
+<header><div><h1>Champions Support</h1><div class="sub">構築 → 対策 → 選出を1つにつなぐ実戦サポート</div></div><div style="display:flex;gap:7px;align-items:center"><div class="badge" title="HTML内蔵の現行M-B固定DB">データ 319/319 固定</div><div class="badge">v20.7</div></div></header>
 <nav class="appnav"><button id="appHomeBtn" class="activeApp" onclick="switchPage('home')">⌂ ホーム</button><button id="appQuickBtn" onclick="switchPage('quick')">⚡ クイック選出</button><button id="appSavedBtn" onclick="switchPage('saved')">💾 パーティ登録</button><button id="appBuildBtn" onclick="switchPage('build')">🧩 パーティ構築</button><button id="appEnvBtn" onclick="switchPage('env')">📊 環境データ</button></nav>
 
 <div id="homePage" class="page activePage">
@@ -1030,13 +1030,15 @@ const v201PixelSlug=m=>{
   .replace(/[.’'`]/g,'').replace(/\s+/g,'').replace(/[^a-z0-9-]/g,'');
 };
 const v201PixelSprite=m=>`https://play.pokemonshowdown.com/sprites/gen5/${v201PixelSlug(m)}.png`;
-const v202ClearSprite=m=>`https://play.pokemonshowdown.com/sprites/home-centered/${v201PixelSlug(m)}.png`;
+const v207DexArtworkId=m=>Number(m?.spriteId)||Number(m?.dex)||0;
+const v207BaseArtwork=m=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${Number(m?.dex)||0}.png`;
+const v202ClearSprite=m=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${v207DexArtworkId(m)}.png`;
 const sprite=m=>v202ClearSprite(m);
 const SHOWDOWN_SPRITE_OVERRIDES={
  "ヒスイダイケンキ":"https://play.pokemonshowdown.com/sprites/gen5/samurott-hisui.png"
 };
 const V201_PIXEL_PLACEHOLDER='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="18" fill="#f1f3f5"/><circle cx="48" cy="48" r="27" fill="none" stroke="#aeb5bf" stroke-width="6"/><path d="M21 48h54" stroke="#aeb5bf" stroke-width="6"/><circle cx="48" cy="48" r="9" fill="#fff" stroke="#aeb5bf" stroke-width="5"/></svg>`);
-const fallback=m=>specialMegaArt[m.name]||homeSprite(m)||V201_PIXEL_PLACEHOLDER;
+const fallback=m=>v207BaseArtwork(m);
 let mine=JSON.parse(localStorage.getItem('champ_mine')||'[]'),opp=[],buildTeam=JSON.parse(localStorage.getItem('champ_build')||'[]'),buildItems=JSON.parse(localStorage.getItem('champ_build_items')||'{}'),savedParty=JSON.parse(localStorage.getItem('champ_saved_party')||'[]');
 const CHAMPIONS_ITEM_RULESET="M-B / 2026-08-10";
 const CHAMPIONS_HELD_ITEMS=["クラボのみ","カゴのみ","モモンのみ","チーゴのみ","ナナシのみ","ヒメリのみ","オレンのみ","キーのみ","ラムのみ","オボンのみ","オッカのみ","イトケのみ","ソクノのみ","リンドのみ","ヤチェのみ","ヨプのみ","ビアーのみ","シュカのみ","バコウのみ","ウタンのみ","タンガのみ","ヨロギのみ","カシブのみ","ハバンのみ","ナモのみ","リリバのみ","ホズのみ","ロゼルのみ","あついいわ","いのちのたま","おうじゃのしるし","おおきなねっこ","かいがらのすず","かたいいし","きあいのタスキ","きあいのハチマキ","きせきのタネ","きれいなぬけがら","ぎんのこな","くろいてっきゅう","くろいメガネ","くろおび","こうかくレンズ","こだわりスカーフ","さらさらいわ","じしゃく","しめったいわ","シルクのスカーフ","しろいハーブ","しんぴのしずく","するどいくちばし","せんせいのツメ","たつじんのおび","たべのこし","ちからのハチマキ","つめたいいわ","でんきだま","どくバリ","とけないこおり","のろいのおふだ","ひかりのこな","ひかりのねんど","ピントレンズ","フォーカスレンズ","まがったスプーン","メタルコート","メトロノーム","メンタルハーブ","もくたん","ものしりメガネ","やわらかいすな","ようせいのハネ","りゅうのキバ"];
@@ -7177,6 +7179,41 @@ function install(){renderSource(true);normalizeMeters();const target=document.ge
 const oldAnalyze=window.v205AnalyzeParty;if(typeof oldAnalyze==='function'){window.v205AnalyzeParty=function(){renderSource(true);const r=oldAnalyze.apply(this,arguments);setTimeout(()=>{renderSource(true);normalizeMeters()},50);return r}}
 const oldOpen=window.v205OpenParty;if(typeof oldOpen==='function'){window.v205OpenParty=function(){const r=oldOpen.apply(this,arguments);setTimeout(()=>{renderSource(true);normalizeMeters()},0);return r}}
 install();setInterval(()=>{if(sourceSig()!==last)renderSource(true);normalizeMeters()},1200);window.__V206_TEST__={source:!!document.getElementById('v206PartySource'),meters:typeof normalizeMeters==='function'};
+})();
+</script>
+<style id="v207-rail-glyphs">
+/* ===== v20.7 reliable rail glyphs ===== */
+@media(min-width:1080px){
+ #v205Rail .v205RailBtn svg{display:none!important}
+ #v205Rail .v205RailBtn{overflow:visible!important;color:var(--xmuted)!important}
+ #v205Rail .v205RailBtn:hover{color:var(--xtext)!important}
+ #v205Rail .v205RailBtn.active{color:var(--xaccenttext)!important}
+ .v207Glyph{position:relative;display:block!important;width:24px;height:24px;flex:0 0 24px;color:currentColor;pointer-events:none}
+ .v207-home:before{content:'';position:absolute;left:5px;bottom:3px;width:14px;height:12px;border:2px solid currentColor;border-top:0;border-radius:2px}
+ .v207-home:after{content:'';position:absolute;left:6px;top:3px;width:12px;height:12px;border-left:2px solid currentColor;border-top:2px solid currentColor;transform:rotate(45deg);border-radius:1px}
+ .v207-quick:before{content:'';position:absolute;inset:2px 5px;background:currentColor;clip-path:polygon(58% 0,15% 54%,45% 54%,31% 100%,86% 42%,55% 42%)}
+ .v207-party:before{content:'';position:absolute;left:4px;top:3px;width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:10px 0 0 currentColor}
+ .v207-party:after{content:'';position:absolute;left:2px;bottom:3px;width:20px;height:9px;border:2px solid currentColor;border-bottom:0;border-radius:12px 12px 3px 3px}
+ .v207-env:before{content:'';position:absolute;left:3px;bottom:3px;width:4px;height:10px;border-radius:2px 2px 0 0;background:currentColor;box-shadow:7px -6px 0 currentColor,14px -2px 0 currentColor}
+ .v207-env:after{content:'';position:absolute;left:2px;right:1px;bottom:2px;height:2px;border-radius:2px;background:currentColor}
+ .v207-settings:before{content:'';position:absolute;left:2px;right:2px;top:5px;height:2px;background:currentColor;box-shadow:0 6px 0 currentColor,0 12px 0 currentColor}
+ .v207-settings:after{content:'';position:absolute;left:6px;top:2px;width:5px;height:5px;border:2px solid currentColor;border-radius:50%;background:var(--xcard);box-shadow:8px 6px 0 -1px var(--xcard),8px 6px 0 1px currentColor,2px 12px 0 -1px var(--xcard),2px 12px 0 1px currentColor}
+ .v205Tip{pointer-events:none!important;visibility:hidden!important;opacity:0!important}
+ .v205RailBtn:hover .v205Tip{visibility:visible!important;opacity:1!important}
+}
+</style>
+<script>
+/* ===== v20.7 pokedex artwork + rail repair ===== */
+(function(){
+'use strict';
+function glyph(kind){return `<span class="v207Glyph v207-${kind}" aria-hidden="true"></span>`}
+function repairRail(){
+ const rail=document.getElementById('v205Rail');if(!rail)return;
+ const map=[['[data-page="home"]','home'],['[data-page="quick"]','quick'],['[data-page="party"]','party'],['[data-page="env"]','env'],['[data-settings]','settings']];
+ for(const [sel,k] of map){const b=rail.querySelector(sel);if(!b)continue;b.querySelectorAll('svg,.v207Glyph').forEach(x=>x.remove());b.insertAdjacentHTML('afterbegin',glyph(k));}
+}
+repairRail();setTimeout(repairRail,0);setTimeout(repairRail,300);
+window.__V207_TEST__={railGlyphs:()=>document.querySelectorAll('#v205Rail .v207Glyph').length,artwork:String(typeof sprite==='function'?sprite({dex:25}):'').includes('/official-artwork/')};
 })();
 </script>
 </body></html>

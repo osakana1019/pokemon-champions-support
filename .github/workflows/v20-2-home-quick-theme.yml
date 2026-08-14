@@ -1,4 +1,4 @@
-name: v20.6 party clarity ui
+name: v20.7 rail icons and pokedex artwork
 
 on:
   push:
@@ -33,25 +33,24 @@ jobs:
           python - <<'PY'
           import pathlib,re
           s=pathlib.Path('index.html').read_text(encoding='utf-8')
-          assert 'Pokémon Champions Support — v20.6' in s
-          assert 'v20.2 theme settings' in s
-          assert 'v20.2 strict quick set logic' in s
-          assert 'v20.2 original clean home' in s
+          assert 'Pokémon Champions Support — v20.7' in s
           assert 'v20.5 minimal rail + contrast' in s
           assert 'v20.5 party workflow + rail' in s
           assert 'v20.6 rail polish + fit meters' in s
           assert 'v20.6 source clarity + meter normalization' in s
-          assert 'id="partyPage"' in s or 'partyPage' in s
-          assert '/sprites/home-centered/' in s
+          assert 'v20.7 reliable rail glyphs' in s
+          assert 'v20.7 pokedex artwork + rail repair' in s
+          assert '/official-artwork/' in s
+          assert 'v207Glyph' in s
           js='\n'.join(re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S))
-          pathlib.Path('/tmp/v206.js').write_text(js,encoding='utf-8')
+          pathlib.Path('/tmp/v207.js').write_text(js,encoding='utf-8')
           PY
-          node --check /tmp/v206.js
+          node --check /tmp/v207.js
       - name: Commit app update
         run: |
           if git diff --quiet; then echo 'No changes'; exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git commit -m 'Polish party source context and meters'
+          git commit -m 'Repair rail icons and use Pokedex artwork'
           git push

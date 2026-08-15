@@ -15,10 +15,14 @@ outdir=Path('assets/zukan-icons');outdir.mkdir(parents=True,exist_ok=True)
 local={};UA='Mozilla/5.0 (compatible; ChampionsSupport/21.0)'
 
 def near_white(px):
-    r,g,b,a=px;return a>0 and r>=240 and g>=240 and b>=240 and max(r,g,b)-min(r,g,b)<=14
+    r,g,b,a=px;return a>0 and r>=238 and g>=238 and b>=238 and max(r,g,b)-min(r,g,b)<=18
 
 def clear_edge_white(im):
-    im=im.convert('RGBA');w,h=im.size;pix=im.load();stack=[];seen=set()
+    im=im.convert('RGBA')
+    # Shrink first: these are UI icons, so processing the original full-resolution
+    # artwork wastes time without improving the rendered result.
+    im.thumbnail((260,260),Image.Resampling.LANCZOS)
+    w,h=im.size;pix=im.load();stack=[];seen=set()
     for x in range(w):stack.extend(((x,0),(x,h-1)))
     for y in range(h):stack.extend(((0,y),(w-1,y)))
     while stack:
@@ -28,14 +32,14 @@ def clear_edge_white(im):
         if not near_white(pix[x,y]):continue
         pix[x,y]=(255,255,255,0);stack.extend(((x+1,y),(x-1,y),(x,y+1),(x,y-1)))
     bbox=im.getbbox()
-    if bbox:im=im.crop(bbox)
+    if bbox: im=im.crop(bbox)
     im.thumbnail((220,220),Image.Resampling.LANCZOS)
     canvas=Image.new('RGBA',(240,240),(255,255,255,0));canvas.alpha_composite(im,((240-im.width)//2,(240-im.height)//2))
     return canvas
 
 def fetch(url):
     req=urllib.request.Request(url,headers={'User-Agent':UA,'Accept':'image/*,*/*;q=0.8'})
-    with urllib.request.urlopen(req,timeout=10) as r:return r.read()
+    with urllib.request.urlopen(req,timeout=8) as r:return r.read()
 
 def process(item):
     name,url=item

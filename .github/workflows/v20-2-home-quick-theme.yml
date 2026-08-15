@@ -1,4 +1,4 @@
-name: v20.9 rebuilt nav and zukan cleanup
+name: v21.0 env nav and transparent zukan icons
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
       - 'scripts/v20_2_home.py'
       - 'scripts/v20_4_sidebar_css.py'
       - 'scripts/v20_4_sidebar_js.py'
+      - 'scripts/v21_nav_icons.py'
       - '.github/workflows/v20-2-home-quick-theme.yml'
   workflow_dispatch:
 
@@ -23,32 +24,40 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Install image tools
+        run: python -m pip install --quiet pillow
       - name: Apply app patches
         run: |
           python scripts/v20_2_patch.py
           python scripts/v20_2_quick.py
           python scripts/v20_2_home.py
-      - name: Validate JavaScript
+          python scripts/v21_nav_icons.py
+      - name: Validate JavaScript and local icons
         run: |
           python - <<'PY'
-          import pathlib,re
+          import pathlib,re,json
           s=pathlib.Path('index.html').read_text(encoding='utf-8')
-          assert 'Pokémon Champions Support — v20.9' in s
+          assert 'Pokémon Champions Support — v21.0' in s
           assert 'v20.9 solid nav + transparent art' in s
           assert 'v20.9 rebuilt nav final' in s
-          assert 'v209Nav' in s
-          assert 'V208_ZUKAN_ART' in s
-          assert 'zukan.pokemon.co.jp' in s
-          assert '.v209Lbl' in s
+          assert 'v21.0 env nav + local transparent zukan icons' in s
+          assert 'V210_LOCAL_ZUKAN' in s
+          assert 'hardOpenEnv' in s
+          m=re.search(r'const V210_LOCAL_ZUKAN=(\{.*?\});',s,re.S)
+          assert m
+          icons=json.loads(m.group(1))
+          assert len(icons)>=20
+          for rel in list(icons.values())[:10]:
+              assert pathlib.Path(rel).exists(), rel
           js='\n'.join(re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S))
-          pathlib.Path('/tmp/v209.js').write_text(js,encoding='utf-8')
+          pathlib.Path('/tmp/v210.js').write_text(js,encoding='utf-8')
           PY
-          node --check /tmp/v209.js
+          node --check /tmp/v210.js
       - name: Commit app update
         run: |
           if git diff --quiet; then echo 'No changes'; exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
-          git commit -m 'Rebuild navigation and remove image tiles'
+          git add index.html assets/zukan-icons
+          git commit -m 'Fix environment navigation and transparent Zukan icons'
           git push

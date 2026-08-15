@@ -1,4 +1,4 @@
-name: v21.0 env nav and transparent zukan icons
+name: v21.1 reliable navigation and usability
 
 on:
   push:
@@ -10,6 +10,7 @@ on:
       - 'scripts/v20_4_sidebar_css.py'
       - 'scripts/v20_4_sidebar_js.py'
       - 'scripts/v21_nav_icons.py'
+      - 'scripts/v21_1_ux.py'
       - '.github/workflows/v20-2-home-quick-theme.yml'
   workflow_dispatch:
 
@@ -36,31 +37,34 @@ jobs:
           python scripts/v20_2_quick.py
           python scripts/v20_2_home.py
           python scripts/v21_nav_icons.py
-      - name: Validate JavaScript and local icons
+          python scripts/v21_1_ux.py
+      - name: Validate app
         run: |
           python - <<'PY'
           import pathlib,re,json
           s=pathlib.Path('index.html').read_text(encoding='utf-8')
-          assert 'Pokémon Champions Support — v21.0' in s
+          assert 'Pokémon Champions Support — v21.1' in s
           assert 'v20.9 solid nav + transparent art' in s
-          assert 'v20.9 rebuilt nav final' in s
           assert 'v21.0 env nav + local transparent zukan icons' in s
+          assert 'v21.1 reliable navigation + usability' in s
           assert 'V210_LOCAL_ZUKAN' in s
-          assert 'hardOpenEnv' in s
+          assert 'v211Nav' in s
+          assert 'window.v211Route=route' in s
+          assert "renderEnvList" in s
           m=re.search(r'const V210_LOCAL_ZUKAN=(\{.*?\});',s,re.S)
           assert m
           icons=json.loads(m.group(1))
           assert len(icons)>=20
           for rel in list(icons.values())[:10]: assert pathlib.Path(rel).exists(), rel
           js='\n'.join(re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S))
-          pathlib.Path('/tmp/v210.js').write_text(js,encoding='utf-8')
+          pathlib.Path('/tmp/v211.js').write_text(js,encoding='utf-8')
           PY
-          node --check /tmp/v210.js
+          node --check /tmp/v211.js
       - name: Commit app update
         run: |
           if git diff --quiet; then echo 'No changes'; exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html assets/zukan-icons
-          git commit -m 'Fix environment navigation and transparent Zukan icons'
+          git commit -m 'Rebuild navigation and improve app usability'
           git push

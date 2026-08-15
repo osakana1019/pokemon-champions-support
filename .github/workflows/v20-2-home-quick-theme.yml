@@ -13,6 +13,10 @@ on:
       - '.github/workflows/v20-2-home-quick-theme.yml'
   workflow_dispatch:
 
+concurrency:
+  group: v21-app-patch
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -47,8 +51,7 @@ jobs:
           assert m
           icons=json.loads(m.group(1))
           assert len(icons)>=20
-          for rel in list(icons.values())[:10]:
-              assert pathlib.Path(rel).exists(), rel
+          for rel in list(icons.values())[:10]: assert pathlib.Path(rel).exists(), rel
           js='\n'.join(re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,re.S))
           pathlib.Path('/tmp/v210.js').write_text(js,encoding='utf-8')
           PY
